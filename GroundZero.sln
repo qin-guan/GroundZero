@@ -4,6 +4,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroundZero.Api", "GroundZer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroundZero.Gavel", "GroundZero.Gavel\GroundZero.Gavel.csproj", "{132F9A16-30C6-4A1F-871F-113E564898A2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroundZero.AppHost", "GroundZero.AppHost\GroundZero.AppHost.csproj", "{C2C56A74-DDDA-4C18-A2CD-58DE9DEEA35B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroundZero.ServiceDefaults", "GroundZero.ServiceDefaults\GroundZero.ServiceDefaults.csproj", "{FEAC581F-B810-4D1F-812B-D2E4C58918BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{132F9A16-30C6-4A1F-871F-113E564898A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{132F9A16-30C6-4A1F-871F-113E564898A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{132F9A16-30C6-4A1F-871F-113E564898A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2C56A74-DDDA-4C18-A2CD-58DE9DEEA35B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2C56A74-DDDA-4C18-A2CD-58DE9DEEA35B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2C56A74-DDDA-4C18-A2CD-58DE9DEEA35B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2C56A74-DDDA-4C18-A2CD-58DE9DEEA35B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FEAC581F-B810-4D1F-812B-D2E4C58918BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEAC581F-B810-4D1F-812B-D2E4C58918BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEAC581F-B810-4D1F-812B-D2E4C58918BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEAC581F-B810-4D1F-812B-D2E4C58918BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

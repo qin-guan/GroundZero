@@ -9,15 +9,15 @@ public class Judge
 
     public string Secret { get; set; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 
-    public Guid UserId { get; set; }
-    public User User { get; set; }
-
-    public Guid ChallengeId { get; set; }
-    public Challenge Challenge { get; set; }
-
     // CrowdBT judging
     public double Alpha { get; set; } = CrowdBt.AlphaPrior;
     public double Beta { get; set; } = CrowdBt.BetaPrior;
+
+    public Guid UserId { get; set; }
+    public AppUser User { get; set; }
+    
+    public Guid HackathonId { get; set; }
+    public Hackathon Hackathon { get; set; }
 
     public Guid? NextTeamId { get; set; }
     public Team? NextTeam { get; set; }
@@ -25,5 +25,5 @@ public class Judge
     public Guid? PreviousTeamId { get; set; }
     public Team? PreviousTeam { get; set; }
 
-    public List<Team> SkippedTeams { get; set; }
+    public ICollection<Team> SkippedTeams { get; set; } = [];
 }
