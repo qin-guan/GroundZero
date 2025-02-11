@@ -34,7 +34,11 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
             .HasForeignKey<Judge>(j => j.PreviousTeamId);
 
         builder.Entity<Judge>()
-            .HasMany(t => t.SkippedTeams)
-            .WithMany(j => j.SkippedJudges);
+            .HasMany(t => t.IgnoredTeams)
+            .WithMany(j => j.JudgesIgnored);
+
+        builder.Entity<Judge>()
+            .HasMany(t => t.ViewedTeams)
+            .WithMany(j => j.JudgesViewed);
     }
 }
