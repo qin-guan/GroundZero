@@ -51,7 +51,8 @@ public class Team
     public Guid? PreviousJudgeId { get; set; }
     public Judge? PreviousJudge { get; set; }
 
-    public ICollection<Judge> SkippedJudges { get; set; } = [];
+    public ICollection<Judge> JudgesIgnored { get; set; } = [];
+    public ICollection<Judge> JudgesViewed { get; set; } = [];
     public ICollection<Participant> Members { get; set; } = [];
 
     public Guid HackathonId { get; set; }

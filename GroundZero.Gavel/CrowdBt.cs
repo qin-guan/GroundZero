@@ -17,9 +17,9 @@ public class CrowdBt
     public const double BetaPrior = 1.0;
     public const double Epsilon = 0.25;
 
-    public static double Argmax<T>(Func<T, double> f, IEnumerable<T> xs)
+    public static T Argmax<T>(Func<T, double> f, IEnumerable<T> xs)
     {
-        return xs.Max(f);
+        return xs.Aggregate((agg, next) => f(next) > f(agg) ? next : agg);
     }
 
     public static double DivergenceGaussian(double mu1, double sigmaSq1, double mu2, double sigmaSq2)

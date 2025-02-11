@@ -10,6 +10,7 @@ public class Judge
     public string Secret { get; set; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 
     // CrowdBT judging
+    public DateTimeOffset UpdatedAt { get; set; }
     public double Alpha { get; set; } = CrowdBt.AlphaPrior;
     public double Beta { get; set; } = CrowdBt.BetaPrior;
 
@@ -25,5 +26,6 @@ public class Judge
     public Guid? PreviousTeamId { get; set; }
     public Team? PreviousTeam { get; set; }
 
-    public ICollection<Team> SkippedTeams { get; set; } = [];
+    public ICollection<Team> IgnoredTeams { get; set; } = [];
+    public ICollection<Team> ViewedTeams { get; set; } = [];
 }
