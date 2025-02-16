@@ -65,7 +65,7 @@ public class GetNextTeamEndpoint(AppDbContext dbContext, UserManager<AppUser> us
                 judge.NextTeam.Prioritized = false;
             }
             
-            judge.UpdatedAt = DateTimeOffset.Now;
+            judge.UpdatedAt = DateTimeOffset.UtcNow;
 
             await dbContext.SaveChangesAsync(ct);
         }
@@ -75,5 +75,7 @@ public class GetNextTeamEndpoint(AppDbContext dbContext, UserManager<AppUser> us
             await SendNoContentAsync(ct);
             return;
         }
+
+        await SendAsync(judge.NextTeam, cancellation: ct);
     }
 }

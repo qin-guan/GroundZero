@@ -24,21 +24,23 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
         base.OnModelCreating(builder);
 
         builder.Entity<Judge>()
-            .HasOne(t => t.NextTeam)
-            .WithOne(j => j.NextJudge)
+            .HasOne(j => j.NextTeam)
+            .WithOne(t => t.NextJudge)
             .HasForeignKey<Judge>(j => j.NextTeamId);
 
         builder.Entity<Judge>()
-            .HasOne(t => t.PreviousTeam)
-            .WithOne(j => j.PreviousJudge)
+            .HasOne(j => j.PreviousTeam)
+            .WithOne(t => t.PreviousJudge)
             .HasForeignKey<Judge>(j => j.PreviousTeamId);
 
         builder.Entity<Judge>()
             .HasMany(t => t.IgnoredTeams)
-            .WithMany(j => j.JudgesIgnored);
+            .WithMany(j => j.JudgesIgnored)
+            .UsingEntity(j => j.ToTable("JudgeIgnored"));
 
         builder.Entity<Judge>()
             .HasMany(t => t.ViewedTeams)
-            .WithMany(j => j.JudgesViewed);
+            .WithMany(j => j.JudgesViewed)
+            .UsingEntity(j => j.ToTable("JudgeViewed"));
     }
 }

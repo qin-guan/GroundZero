@@ -3,7 +3,7 @@ using Projects;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var pg = builder.AddPostgres("db")
-    .WithPgWeb()
+    .WithPgAdmin(o => { o.WithHostPort(8080); })
     .AddDatabase("groundzero");
 
 builder.AddProject<GroundZero_Api>("api")

@@ -1,6 +1,6 @@
 namespace GroundZero.Api.Endpoints.Hackathon.Judge.Vote;
 
-public class VoteRequest
+public class PostVoteRequest
 {
     public Guid Id { get; set; }
     
