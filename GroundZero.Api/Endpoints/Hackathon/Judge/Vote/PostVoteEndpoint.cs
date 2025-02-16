@@ -8,9 +8,14 @@ using MoreLinq.Extensions;
 
 namespace GroundZero.Api.Endpoints.Hackathon.Judge.Vote;
 
-public class VoteEndpoint(UserManager<AppUser> userManager, AppDbContext dbContext) : Endpoint<VoteRequest>
+public class PostVoteEndpoint(UserManager<AppUser> userManager, AppDbContext dbContext) : Endpoint<PostVoteRequest>
 {
-    public override async Task HandleAsync(VoteRequest req, CancellationToken ct)
+    public override void Configure()
+    {
+        Post("/Hackathon/{Id:guid}/Judge/Vote");
+    }
+
+    public override async Task HandleAsync(PostVoteRequest req, CancellationToken ct)
     {
         var userId = Guid.Parse(userManager.GetUserId(User));
         var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == userId, cancellationToken: ct);
@@ -32,54 +37,61 @@ public class VoteEndpoint(UserManager<AppUser> userManager, AppDbContext dbConte
         {
             throw new Exception("User is not a judge.");
         }
+        
+        ArgumentNullException.ThrowIfNull(judge.NextTeam);
 
         if (req.Action == "Skip")
         {
             judge.IgnoredTeams.Add(judge.NextTeam);
-            judge.NextTeam = null;
+            // judge.NextTeamId = null;
+            Console.WriteLine("here");
         }
         else
         {
+            Console.WriteLine("Here2");
             if (judge.PreviousTeam is null)
             {
-                
+                judge.IgnoredTeams.Add(judge.NextTeam);
+                judge.PreviousTeam = judge.NextTeam;
             }
-            
-            if (judge.PreviousTeam.Active && judge.NextTeam.Active)
+            else
             {
-                var winner = req.Action == "Previous" ? judge.PreviousTeam : judge.NextTeam;
-                var loser = req.Action == "Previous" ? judge.NextTeam : judge.PreviousTeam;
-
-                var (uAlpha, uBeta, uWinnerMu, uWinnerSigmaSq, uLoserMu, uLoserSigmaSq) = CrowdBt.Update(
-                    judge.Alpha,
-                    judge.Beta,
-                    winner.Mu,
-                    winner.SigmaSq,
-                    loser.Mu,
-                    loser.SigmaSq
-                );
-
-                judge.Alpha = uAlpha;
-                judge.Beta = uBeta;
-                winner.Mu = uWinnerMu;
-                winner.SigmaSq = uWinnerSigmaSq;
-                loser.Mu = uLoserMu;
-                loser.SigmaSq = uLoserSigmaSq;
-
-                await dbContext.Decisions.AddAsync(new Decision
+                if (judge.PreviousTeam.Active && judge.NextTeam.Active)
                 {
-                    Judge = judge,
-                    Winner = winner,
-                    Loser = loser
-                }, ct);
+                    var winner = req.Action == "Previous" ? judge.PreviousTeam : judge.NextTeam;
+                    var loser = req.Action == "Previous" ? judge.NextTeam : judge.PreviousTeam;
+
+                    var (uAlpha, uBeta, uWinnerMu, uWinnerSigmaSq, uLoserMu, uLoserSigmaSq) = CrowdBt.Update(
+                        judge.Alpha,
+                        judge.Beta,
+                        winner.Mu,
+                        winner.SigmaSq,
+                        loser.Mu,
+                        loser.SigmaSq
+                    );
+
+                    judge.Alpha = uAlpha;
+                    judge.Beta = uBeta;
+                    winner.Mu = uWinnerMu;
+                    winner.SigmaSq = uWinnerSigmaSq;
+                    loser.Mu = uLoserMu;
+                    loser.SigmaSq = uLoserSigmaSq;
+
+                    await dbContext.Decisions.AddAsync(new Decision
+                    {
+                        Judge = judge,
+                        Winner = winner,
+                        Loser = loser
+                    }, ct);
+                }
+
+                judge.NextTeam.JudgesViewed.Add(judge);
+                judge.PreviousTeam = judge.NextTeam;
+                judge.IgnoredTeams.Add(judge.PreviousTeam);
             }
-
-            judge.NextTeam.JudgesViewed.Add(judge);
-            judge.PreviousTeam = judge.NextTeam;
-            judge.IgnoredTeams.Add(judge.PreviousTeam);
-
-            await dbContext.SaveChangesAsync(ct);
         }
+
+        await dbContext.SaveChangesAsync(ct);
 
         var availableItems = hackathon.Teams
             .Where(t => t.Active)
@@ -104,7 +116,8 @@ public class VoteEndpoint(UserManager<AppUser> userManager, AppDbContext dbConte
         var teams = preferredItems.Shuffle().ToList();
         if (teams.Count == 0)
         {
-            judge.NextTeam = null;
+            Console.WriteLine("here3");
+            judge.NextTeamId = null;
         }
         else
         {
@@ -128,5 +141,7 @@ public class VoteEndpoint(UserManager<AppUser> userManager, AppDbContext dbConte
                     );
             }
         }
+
+        await dbContext.SaveChangesAsync(ct);
     }
 }

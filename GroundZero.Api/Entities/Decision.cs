@@ -12,5 +12,5 @@ public class Decision
     public Guid LoserId { get; set; }
     public Team Loser { get; set; }
 
-    public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.Now;
+    public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
 }

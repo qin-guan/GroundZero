@@ -13,17 +13,17 @@ public class Team
     /// <summary>
     /// Team / project name
     /// </summary>
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     /// <summary>
     /// Team / project description
     /// </summary>
-    public string Description { get; set; }
+    public required string Description { get; set; }
 
     /// <summary>
     /// Team / project location
     /// </summary>
-    public string Location { get; set; }
+    public required string Location { get; set; }
 
     /// <summary>
     /// Project Devpost link
@@ -41,13 +41,14 @@ public class Team
     public string JoinCode { get; set; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 
     // CrowedBT judging
-    public bool Active { get; set; }
-    public bool Prioritized { get; set; }
+    public bool Active { get; set; } = true;
+    public bool Prioritized { get; set; } = false;
     public double Mu { get; set; } = CrowdBt.MuPrior;
     public double SigmaSq { get; set; } = CrowdBt.SigmaSqPrior;
 
     public Guid? NextJudgeId { get; set; }
     public Judge? NextJudge { get; set; }
+
     public Guid? PreviousJudgeId { get; set; }
     public Judge? PreviousJudge { get; set; }
 
