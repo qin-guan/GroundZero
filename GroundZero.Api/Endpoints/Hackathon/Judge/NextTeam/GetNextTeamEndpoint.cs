@@ -7,7 +7,7 @@ using MoreLinq.Extensions;
 
 namespace GroundZero.Api.Endpoints.Hackathon.Judge.NextTeam;
 
-public class GetNextTeamEndpoint(AppDbContext dbContext, UserManager<AppUser> userManager): Endpoint<GetNextTeamRequest, Team>
+public class GetNextTeamEndpoint(AppDbContext dbContext, UserManager<AppUser> userManager) : Endpoint<GetNextTeamRequest, Team>
 {
     public override void Configure()
     {
@@ -36,7 +36,7 @@ public class GetNextTeamEndpoint(AppDbContext dbContext, UserManager<AppUser> us
         {
             throw new Exception("User is not a judge.");
         }
-        
+
         if (judge.NextTeam is null)
         {
             var availableItems = hackathon.Teams
@@ -64,7 +64,7 @@ public class GetNextTeamEndpoint(AppDbContext dbContext, UserManager<AppUser> us
             {
                 judge.NextTeam.Prioritized = false;
             }
-            
+
             judge.UpdatedAt = DateTimeOffset.UtcNow;
 
             await dbContext.SaveChangesAsync(ct);

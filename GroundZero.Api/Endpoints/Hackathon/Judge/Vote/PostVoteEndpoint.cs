@@ -37,7 +37,7 @@ public class PostVoteEndpoint(UserManager<AppUser> userManager, AppDbContext dbC
         {
             throw new Exception("User is not a judge.");
         }
-        
+
         ArgumentNullException.ThrowIfNull(judge.NextTeam);
 
         if (req.Action == "Skip")
