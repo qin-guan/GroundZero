@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroundZero.Api", "GroundZero.Api\GroundZero.Api.csproj", "{D080F2AF-9EDD-41A2-9A92-4D8E459AAADD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroundZero.Gavel", "GroundZero.Gavel\GroundZero.Gavel.csproj", "{132F9A16-30C6-4A1F-871F-113E564898A2}"
@@ -7,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroundZero.AppHost", "GroundZero.AppHost\GroundZero.AppHost.csproj", "{C2C56A74-DDDA-4C18-A2CD-58DE9DEEA35B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroundZero.ServiceDefaults", "GroundZero.ServiceDefaults\GroundZero.ServiceDefaults.csproj", "{FEAC581F-B810-4D1F-812B-D2E4C58918BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroundZero.Tests", "GroundZero.Tests\GroundZero.Tests.csproj", "{7FDF308E-C245-4C8C-9BE6-7435A6328373}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,5 +35,12 @@ Global
 		{FEAC581F-B810-4D1F-812B-D2E4C58918BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FEAC581F-B810-4D1F-812B-D2E4C58918BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FEAC581F-B810-4D1F-812B-D2E4C58918BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FDF308E-C245-4C8C-9BE6-7435A6328373}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FDF308E-C245-4C8C-9BE6-7435A6328373}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FDF308E-C245-4C8C-9BE6-7435A6328373}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FDF308E-C245-4C8C-9BE6-7435A6328373}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

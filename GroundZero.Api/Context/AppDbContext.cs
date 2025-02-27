@@ -2,6 +2,7 @@ using GroundZero.Api.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace GroundZero.Api.Context;
 
@@ -14,15 +15,24 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
 
     public DbSet<Decision> Decisions { get; set; }
     public DbSet<Hackathon> Hackathons { get; set; }
+    public DbSet<HackathonUser> HackathonUsers { get; set; }
     public DbSet<Judge> Judges { get; set; }
+    public DbSet<Organizer> Organizers { get; set; }
     public DbSet<Participant> Participants { get; set; }
     public DbSet<ParticipantReview> ParticipantReviews { get; set; }
+    public DbSet<Resource> Resources { get; set; }
+    public DbSet<ResourceRedemption> ResourceRedemptions { get; set; }
     public DbSet<Team> Teams { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
+        builder.UseGuidCollation("utf8mb4_general_ci");
+
+        builder.Entity<HackathonUser>()
+            .UseTptMappingStrategy();
+        
         builder.Entity<Judge>()
             .HasOne(j => j.NextTeam)
             .WithOne(t => t.NextJudge)

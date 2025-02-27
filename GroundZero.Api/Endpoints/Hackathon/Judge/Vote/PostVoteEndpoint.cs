@@ -18,25 +18,14 @@ public class PostVoteEndpoint(UserManager<AppUser> userManager, AppDbContext dbC
     public override async Task HandleAsync(PostVoteRequest req, CancellationToken ct)
     {
         var userId = Guid.Parse(userManager.GetUserId(User));
-        var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == userId, cancellationToken: ct);
-
-        var hackathon = await dbContext.Hackathons
-            .Include(h => h.Teams)
-            .ThenInclude(t => t.JudgesViewed)
-            .Include(h => h.Judges)
-            .ThenInclude(j => j.NextTeam)
-            .Include(h => h.Judges)
-            .ThenInclude(j => j.PreviousTeam)
-            .Include(h => h.Judges)
-            .ThenInclude(j => j.IgnoredTeams)
-            .SingleOrDefaultAsync(h => h.Id == req.Id, cancellationToken: ct);
-        ArgumentNullException.ThrowIfNull(hackathon);
-
-        var judge = hackathon.Judges.SingleOrDefault(j => j.UserId == user.Id);
-        if (judge is null)
-        {
-            throw new Exception("User is not a judge.");
-        }
+        
+        var judge = await dbContext.Judges
+            .Include(j => j.Hackathon)
+            .Include(j => j.ViewedTeams)
+            .Include(j => j.PreviousTeam)
+            .Include(j => j.NextTeam)
+            .Include(j => j.IgnoredTeams)
+            .SingleAsync(j => j.UserId == userId && j.HackathonId == req.Id);
 
         ArgumentNullException.ThrowIfNull(judge.NextTeam);
 
@@ -93,7 +82,7 @@ public class PostVoteEndpoint(UserManager<AppUser> userManager, AppDbContext dbC
 
         await dbContext.SaveChangesAsync(ct);
 
-        var availableItems = hackathon.Teams
+        var availableItems = judge.Hackathon.Teams
             .Where(t => t.Active)
             .Where(t => judge.IgnoredTeams.All(st => st.Id != t.Id))
             .ToList();
@@ -102,10 +91,12 @@ public class PostVoteEndpoint(UserManager<AppUser> userManager, AppDbContext dbC
             ? availableItems.Where(i => i.Prioritized).ToList()
             : availableItems;
 
-        var busyProjects = hackathon.Judges
+        var busyProjects = await dbContext.Judges
+            .Where(j => j.HackathonId == req.Id)
             .Where(j => j.NextTeamId != null)
             .Where(j => (DateTimeOffset.UtcNow - j.UpdatedAt) < TimeSpan.FromSeconds(60))
-            .Select(j => j.NextTeamId);
+            .Select(j => j.NextTeamId)
+            .ToListAsync();
 
         var nonBusyProjects = items.Where(i => !busyProjects.Contains(i.Id)).ToList();
 

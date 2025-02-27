@@ -10,37 +10,28 @@ namespace GroundZero.Api.Endpoints.Hackathon;
 
 public class ListHackathonEndpoint(UserManager<AppUser> userManager, AppDbContext dbContext) : EndpointWithoutRequest<IEnumerable<HackathonResponse>>
 {
-    public override void Configure()
-    {
-        Get("/Hackathon");
-    }
+  public override void Configure()
+  {
+    Get("/Hackathon");
+  }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        var userId = userManager.GetUserId(User);
-        ArgumentNullException.ThrowIfNull(userId);
+  public override async Task HandleAsync(CancellationToken ct)
+  {
+    var userId = userManager.GetUserId(User);
+    ArgumentNullException.ThrowIfNull(userId);
 
-        var user = await dbContext.Users
-        .Include(u => u.HackathonsAdminIn)
-        .Include(u => u.HackathonsJudgedIn)
-          .ThenInclude(j => j.Hackathon)
-        .Include(u => u.HackathonsParticipatedIn)
-          .ThenInclude(p => p.Team)
-            .ThenInclude(t => t!.Hackathon)
-        .SingleOrDefaultAsync(u => u.Id == Guid.Parse(userId));
-        ArgumentNullException.ThrowIfNull(user);
+    var user = await dbContext.Users
+      .Include(u => u.Hackathons)
+        .ThenInclude(h => h.Hackathon)
+      .Where(u => u.Id == Guid.Parse(userId))
+      .Select(u => u.Hackathons.Select(h => h.Hackathon))
+      .SingleOrDefaultAsync(ct);
 
-        var hackathons = user.HackathonsAdminIn
-        .Concat(user.HackathonsJudgedIn.Select(j => j.Hackathon))
-        .Concat(
-          user.HackathonsParticipatedIn
-          .Where(p => p.Team is not null)
-          .Select(p => p.Team!.Hackathon)
-        );
+    ArgumentNullException.ThrowIfNull(user);
 
-        await SendOkAsync(
-          hackathons.ToResponse(),
-          ct
-        );
-    }
+    await SendOkAsync(
+      user.ToResponse(),
+      ct
+    );
+  }
 }

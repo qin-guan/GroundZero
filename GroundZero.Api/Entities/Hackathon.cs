@@ -9,9 +9,6 @@ public class Hackathon
     public required string Venue { get; set; }
     public required Uri HomepageUri { get; set; }
 
-    public ICollection<Organizer> Organizers { get; set; } = [];
-    public ICollection<AppUser> Admins { get; set; } = [];
+    public ICollection<HackathonUser> Users { get; set; } = [];
     public ICollection<Team> Teams { get; set; } = [];
-    public ICollection<Judge> Judges { get; set; } = [];
-    public ICollection<Participant> Participants { get; set; } = [];
 }

@@ -9,22 +9,27 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddNpgsqlDbContext<AppDbContext>(
+builder.AddMySqlDbContext<AppDbContext>(
     "groundzero",
+    configureSettings: options =>
+    {
+        options.DisableRetry = true;
+    },
     configureDbContextOptions: options =>
     {
-        options.UseSeeding((context, _) =>
+        options.UseSeeding((ctx, _) =>
         {
-            context.AddSeedData();
-            context.SaveChanges();
+            ctx.AddSeedData();
+            ctx.SaveChanges();
         });
 
-        // options.UseAsyncSeeding(async (context, _, ct) =>
-        // {
-        //     context.AddSeedData();
-        //     await context.SaveChangesAsync();
-        // });
-    });
+        options.UseAsyncSeeding(async (ctx, _, ct) =>
+        {
+            ctx.AddSeedData();
+            await ctx.SaveChangesAsync();
+        });
+    }
+);
 
 builder.Services.AddFastEndpoints()
     .SwaggerDocument();
@@ -41,8 +46,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // await db.Database.EnsureDeletedAsync();
-    db.Database.EnsureCreated();
+    await db.Database.EnsureDeletedAsync();
+    await db.Database.EnsureCreatedAsync();
 }
 
 app.UseHttpsRedirection();
