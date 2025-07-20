@@ -9,20 +9,17 @@
   </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
-        <PackageReference Include="Aspire.Pomelo.EntityFrameworkCore.MySql" Version="9.1.0" />
-        <PackageReference Include="FastEndpoints" Version="5.34.0" />
-        <PackageReference Include="FastEndpoints.Swagger" Version="5.34.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.1" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.1" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
+        <PackageReference Include="FastEndpoints" Version="6.2.0" />
+        <PackageReference Include="FastEndpoints.Swagger" Version="6.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="morelinq" Version="4.4.0" />
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.3.efcore.9.0.0" />
-        <PackageReference Include="Riok.Mapperly" Version="4.1.1" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.0.14" />
+        <PackageReference Include="Riok.Mapperly" Version="4.2.1" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.6.3" />
     </ItemGroup>
 
     <ItemGroup>
