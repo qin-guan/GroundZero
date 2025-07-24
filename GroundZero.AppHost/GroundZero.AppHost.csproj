@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\GroundZero.Api\GroundZero.Api.csproj" />
+        <ProjectReference Include="..\GroundZero.Web\GroundZero.Web.csproj" />
     </ItemGroup>
 
 </Project>
