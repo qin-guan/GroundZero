@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
+using Projects;
 
-namespace GroundZero.Tests.Tests
+namespace GroundZero.Tests
 {
     public class IntegrationTest1
     {
@@ -17,7 +18,7 @@ namespace GroundZero.Tests.Tests
         public async Task LoginWithAdminUser()
         {
             // Arrange
-            var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.GroundZero_AppHost>();
+            var appHost = await DistributedApplicationTestingBuilder.CreateAsync<GroundZero_AppHost>();
             appHost.Services.ConfigureHttpClientDefaults(clientBuilder =>
             {
                 clientBuilder.AddStandardResilienceHandler();

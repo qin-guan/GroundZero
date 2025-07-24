@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="GroundZero.AppHost/GroundZero.AppHost.csproj" />
+  <Project Path="GroundZero.Gavel/GroundZero.Gavel.csproj" />
+  <Project Path="GroundZero.ServiceDefaults/GroundZero.ServiceDefaults.csproj" />
+  <Project Path="GroundZero.Tests/GroundZero.Tests.csproj" />
+  <Project Path="GroundZero.Web/GroundZero.Web.csproj" />
+  <Project Path="GroundZero.Web.Client/GroundZero.Web.Client.csproj" />
+</Solution>
