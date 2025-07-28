@@ -6,9 +6,8 @@ public static class AuthenticationExtensions
 {
     public static Guid GetUserId(this ClaimsPrincipal principal)
     {
-        var raw = principal.Identities
-            .Single(i => i.Name == ClaimsIdentity.DefaultIssuer).Claims
-            .Single(c => c.Type == ClaimTypes.NameIdentifier);
+        var raw = principal.Claims
+            .Single(c => c.Type == ClaimTypes.NameIdentifier && c.Issuer == ClaimsIdentity.DefaultIssuer);
 
         return Guid.Parse(raw.Value);
     }

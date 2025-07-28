@@ -2,6 +2,7 @@ using SqlSugar;
 
 namespace GroundZero.Web.Entities;
 
+[SugarIndex("IX_Hackathon_ShortCode", nameof(ShortCode), OrderByType.Asc)]
 public class Hackathon
 {
     [SugarColumn(IsPrimaryKey = true)]
@@ -14,6 +15,22 @@ public class Hackathon
     public string Venue { get; set; } = null!;
 
     public string HomepageUri { get; set; } = null!;
+
+    public string ShortCode { get; set; } = null!;
+
+    /// <summary>
+    /// When enabled, participants will be able to see and join the hackathon using the short code
+    /// </summary>
+    [SugarColumn(OldColumnName = "IsAcceptingParticipants")]
+    public bool IsPublished { get; set; }
+
+    public DateTimeOffset EventStartDate { get; set; }
+
+    public DateTimeOffset EventEndDate { get; set; }
+
+    public DateTimeOffset SubmissionsStartDate { get; set; }
+
+    public DateTimeOffset SubmissionsEndDate { get; set; }
 
     [Navigate(NavigateType.OneToMany, nameof(Participant.HackathonId))]
     public List<Participant> Participants { get; set; }

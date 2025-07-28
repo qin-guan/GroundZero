@@ -6,7 +6,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 //     .WithPgAdmin(o => { o.WithHostPort(8080); })
 //     .AddDatabase("groundzero");
 
-builder.AddProject<GroundZero_Api>("api");
+builder.AddProject<GroundZero_Web>("api");
     // .WithReference(pg);
 
 builder.Build().Run();
