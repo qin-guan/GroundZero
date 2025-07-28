@@ -1,19 +1,16 @@
-﻿@inherits LayoutComponentBase
+﻿@using GroundZero.Web.Client.Layout
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+@inherits LayoutComponentBase
+
+<HxMessenger Position="ToastContainerPosition.BottomCenter"/>
+<HxMessageBoxHost/>
+
+<div class="d-md-flex min-vh-100">
+    <NavMenu @rendermode="InteractiveWebAssembly"/>
+
+    <div class="main p-4 flex-grow-1">
+        @Body
     </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>

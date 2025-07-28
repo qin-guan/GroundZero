@@ -36,6 +36,7 @@ public static class DataSeedingExtensions
             var hackathon = await client.Insertable(new Hackathon
                 {
                     Name = "HackOMania 2026",
+                    ShortCode = "hackomania2026",
                     Description = "The largest student hackathon in Singapore",
                     Venue = "Somewhere over the rainbow",
                     HomepageUri = "https://hackomania.geekshacking.com",
