@@ -6,9 +6,10 @@ namespace GroundZero.Web.Entities;
 
 public class Judge
 {
-    public string Secret { get; set; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+    [SugarColumn(IsPrimaryKey = true)]
+    public Guid Id { get; set; }
 
-    // CrowdBT judging
+    public string Secret { get; set; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 
     #region CrowdBT
 
