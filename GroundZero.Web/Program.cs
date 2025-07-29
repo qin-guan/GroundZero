@@ -57,7 +57,11 @@ builder.Services
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = GitHubAuthenticationDefaults.AuthenticationScheme;
     })
-    .AddCookie(options => { options.LoginPath = "/Auth/GitHub/Login"; })
+    .AddCookie(options => { 
+        options.LoginPath = "/Auth/GitHub/Login"; 
+        options.Cookie.Name = ".AspNet.GroundZero";
+        options.Cookie.Domain = ".from.sg";
+    })
     .AddGitHub(options =>
     {
         options.ClientId = builder.Configuration["GitHub:ClientId"] ?? string.Empty;
