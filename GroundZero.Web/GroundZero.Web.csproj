@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <UserSecretsId>93ad3f86-58ef-4a3d-a5d7-1677e73755b3</UserSecretsId>
+        <ContainerRepository>groundzero</ContainerRepository>
     </PropertyGroup>
 
     <ItemGroup>

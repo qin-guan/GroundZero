@@ -60,8 +60,8 @@ builder.Services
     .AddCookie(options => { options.LoginPath = "/Auth/GitHub/Login"; })
     .AddGitHub(options =>
     {
-        options.ClientId = "Iv23lieaI0YRJGwxCDUb";
-        options.ClientSecret = "";
+        options.ClientId = builder.Configuration["GitHub:ClientId"] ?? string.Empty;
+        options.ClientSecret = builder.Configuration["GitHub:ClientSecret"] ?? string.Empty;
         options.CallbackPath = "/Auth/GitHub/Callback";
 
         options.Events.OnCreatingTicket = async context =>
