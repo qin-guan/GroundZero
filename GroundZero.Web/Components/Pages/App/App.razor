@@ -5,6 +5,7 @@
 @using SqlSugar
 
 @attribute [Authorize]
+@attribute [StreamRendering]
 
 @inject ISqlSugarClient SqlSugar
 @inject IHttpContextAccessor HttpContextAccessor

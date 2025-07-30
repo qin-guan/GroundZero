@@ -28,6 +28,6 @@ public class Endpoint(ISqlSugarClient db) : Endpoint<Request, Response>
 
         var entity = await db.InsertNav(hackathon).Include(h => h.Organizers).ExecuteReturnEntityAsync();
 
-        await SendOkAsync(entity.ToResponse(), ct);
+        await Send.OkAsync(entity.ToResponse(), ct);
     }
 }
