@@ -1,22 +1,16 @@
 @page "/App/Hackathons/{id:guid}/Judges"
 
+@using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
 @using SqlSugar
 
 @attribute [Authorize]
 @attribute [StreamRendering]
 
-@implements IDisposable
-
 @inject NavigationManager Navigation
 @inject ISqlSugarClient Db
 
-@if (Model is null)
-{
-    return;
-}
-
-<NavContainer HackathonId="Id" HackathonName="@Model?.Name">
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
     haha and then what
 </NavContainer>
 
@@ -24,93 +18,18 @@
 
     [Parameter]
     public Guid Id { get; set; }
-
-    private EditContext? _editContext;
-    private ValidationMessageStore? _messageStore;
-
-    private bool EventStartDateIsInvalid => _editContext!.GetValidationMessages(() => Model!.EventStartDate).Any();
-
-    private bool EventEndDateIsInvalid => _editContext!.GetValidationMessages(() => Model!.EventEndDate).Any();
-
-    [SupplyParameterFromForm]
-    private Hackathon? Model { get; set; }
-
+    
+    private Hackathon? Hackathon { get; set; }
+    
     protected override async Task OnInitializedAsync()
     {
-        var entity = await Db.Queryable<Entities.Hackathon>().SingleAsync(h => h.Id == Id);
-        if (entity is null)
+        Hackathon = await Db.Queryable<Hackathon>().SingleAsync(h => h.Id == Id);
+        if (Hackathon is null)
         {
             Navigation.NavigateTo("App");
             return;
         }
 
-        Model ??= new Hackathon
-        {
-            Name = entity.Name,
-            Description = entity.Description,
-            EventStartDate = entity.EventStartDate,
-            EventEndDate = entity.EventEndDate,
-            Venue = entity.Venue,
-            HomepageUri = entity.HomepageUri
-        };
-
-        _editContext ??= new EditContext(Model);
-        _editContext.OnValidationRequested += HandleValidationRequested;
-        _messageStore = new ValidationMessageStore(_editContext);
-    }
-
-    private void HandleValidationRequested(
-        object? sender,
-        ValidationRequestedEventArgs args
-    )
-    {
-        _messageStore?.Clear();
-
-        if (string.IsNullOrWhiteSpace(Model!.Name))
-        {
-            _messageStore?.Add(() => Model.Name, "Name must not be empty hahahaha");
-        }
-    }
-
-    private async Task Submit()
-    {
-        var hackathon = new Entities.Hackathon
-        {
-            Id = Id,
-            Name = Model!.Name ?? throw new Exception(),
-            Description = Model!.Description ?? throw new Exception(),
-            EventStartDate = Model.EventStartDate ?? DateTimeOffset.Now,
-            EventEndDate = Model.EventEndDate ?? DateTimeOffset.Now,
-            Venue = Model!.Venue ?? throw new Exception(),
-            HomepageUri = Model!.HomepageUri ?? throw new Exception()
-        };
-
-        var entity = await Db.Updateable(hackathon).ExecuteReturnEntityAsync();
-
-        Navigation.NavigateTo($"App/Hackathons/{entity.Id}");
-    }
-
-    public class Hackathon
-    {
-        public string? Name { get; set; }
-
-        public string? Description { get; set; }
-
-        public string? Venue { get; set; }
-
-        public string? HomepageUri { get; set; }
-
-        public DateTimeOffset? EventStartDate { get; set; }
-
-        public DateTimeOffset? EventEndDate { get; set; }
-    }
-
-    public void Dispose()
-    {
-        if (_editContext is not null)
-        {
-            _editContext.OnValidationRequested -= HandleValidationRequested;
-        }
     }
 
 }
