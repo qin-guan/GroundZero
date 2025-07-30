@@ -1,4 +1,4 @@
-@page "/App/Hackathons/{id:guid}/Advanced"
+@page "/Home/Hackathons/{id:guid}/Advanced"
 
 @using Microsoft.AspNetCore.Authorization
 @using SqlSugar
@@ -39,7 +39,7 @@
         var entity = await Db.Queryable<Entities.Hackathon>().SingleAsync(h => h.Id == Id);
         if (entity is null)
         {
-            Navigation.NavigateTo("App");
+            Navigation.NavigateTo("Home");
             return;
         }
 
@@ -86,7 +86,7 @@
 
         var entity = await Db.Updateable(hackathon).ExecuteReturnEntityAsync();
 
-        Navigation.NavigateTo($"App/Hackathons/{entity.Id}");
+        Navigation.NavigateTo($"Home/Hackathons/{entity.Id}");
     }
 
     public class Hackathon

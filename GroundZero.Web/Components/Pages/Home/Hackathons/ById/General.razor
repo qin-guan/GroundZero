@@ -1,10 +1,10 @@
-@page "/App/Hackathons/{id:guid}"
+@page "/Home/Hackathons/{id:guid}"
 
 @using Microsoft.AspNetCore.Authorization
 @using SqlSugar
 
 @attribute [Authorize]
-@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [StreamRendering]
 
 @implements IDisposable
 
@@ -77,7 +77,7 @@
         Hackathon = await Db.Queryable<Entities.Hackathon>().SingleAsync(h => h.Id == Id);
         if (Hackathon is null)
         {
-            Navigation.NavigateTo("App");
+            Navigation.NavigateTo("Home");
             return;
         }
 
@@ -125,7 +125,7 @@
 
         var entity = await Db.Updateable(hackathon).ExecuteReturnEntityAsync();
 
-        Navigation.NavigateTo($"App/Hackathons/{entity.Id}");
+        Navigation.NavigateTo($"Home/Hackathons/{entity.Id}");
     }
 
     public class UpdateHackathonModel

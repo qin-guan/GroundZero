@@ -1,4 +1,4 @@
-@page "/App/Hackathons/{id:guid}/Teams"
+@page "/Home/Hackathons/{id:guid}/Participants"
 
 @using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
@@ -22,13 +22,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Hackathon = await Db.Queryable<Hackathon>()
-            .Includes(h => h.Teams)
-            .SingleAsync(h => h.Id == Id);
-
+        Hackathon = await Db.Queryable<Entities.Hackathon>().SingleAsync(h => h.Id == Id);
         if (Hackathon is null)
         {
-            Navigation.NavigateTo("App");
+            Navigation.NavigateTo("Home");
             return;
         }
     }

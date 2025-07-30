@@ -1,4 +1,4 @@
-@page "/App/Hackathons/New"
+@page "/Home/Hackathons/New"
 @using GroundZero.Web.Authentication
 @using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
@@ -137,7 +137,7 @@
             .Include(h => h.Organizers)
             .ExecuteReturnEntityAsync();
 
-        Navigation.NavigateTo($"App/Hackathons/{entity.Id}");
+        Navigation.NavigateTo($"Home/Hackathons/{entity.Id}");
     }
 
     public class Hackathon
