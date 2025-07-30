@@ -15,6 +15,6 @@ public class Endpoint(ISqlSugarClient db) : EndpointWithoutRequest<List<Response
         var items = await db.Queryable<Entities.Hackathon>()
             .ToListAsync(ct);
 
-        await SendOkAsync(items.ToResponse(), ct);
+        await Send.OkAsync(items.ToResponse(), ct);
     }
 }

@@ -1,11 +1,12 @@
 <HxBreadcrumb>
     <HxBreadcrumbItem Href="App" Text="Hackathons"/>
-    <HxBreadcrumbItem Text="@HackathonName" Active="true"/>
+    <HxBreadcrumbItem Text=@(HackathonName ?? "Loading...") Active="true"/>
 </HxBreadcrumb>
 
 <HxNav Variant="NavVariant.Pills" CssClass="mb-3">
     <HxNavLink Href=@($"/App/Hackathons/{HackathonId}/") Match="NavLinkMatch.All" Text="General"/>
     <HxNavLink Href=@($"/App/Hackathons/{HackathonId}/Judges") Text="Judges"/>
+    <HxNavLink Href=@($"/App/Hackathons/{HackathonId}/Teams") Text="Teams"/>
     <HxNavLink Href=@($"/App/Hackathons/{HackathonId}/Participants") Text="Participants"/>
     <HxNavLink Href=@($"/App/Hackathons/{HackathonId}/Sharing") Text="Sharing"/>
     <HxNavLink Href=@($"/App/Hackathons/{HackathonId}/Advanced") Text="Advanced" CssClass="link-danger"/>

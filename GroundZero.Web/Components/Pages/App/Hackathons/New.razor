@@ -95,6 +95,11 @@
         {
             _messageStore?.Add(() => Model.EventEndDate, "Event should end after it starts");
         }
+
+        if (string.IsNullOrWhiteSpace(Model!.ShortCode))
+        {
+            _messageStore?.Add(() => Model.ShortCode, "You need to provide a short code");
+        }
     }
 
     private async Task Submit()

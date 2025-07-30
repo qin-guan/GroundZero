@@ -6,19 +6,18 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <UserSecretsId>93ad3f86-58ef-4a3d-a5d7-1677e73755b3</UserSecretsId>
-        <ContainerRepository>groundzero</ContainerRepository>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.4"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.7" />
         <PackageReference Include="AspNet.Security.OAuth.GitHub" Version="9.4.0"/>
-        <PackageReference Include="FastEndpoints" Version="6.2.0"/>
-        <PackageReference Include="FastEndpoints.Swagger" Version="6.2.0"/>
+        <PackageReference Include="FastEndpoints" Version="7.0.1" />
+        <PackageReference Include="FastEndpoints.Swagger" Version="7.0.1" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.7"/>
         <PackageReference Include="morelinq" Version="4.4.0"/>
         <PackageReference Include="Riok.Mapperly" Version="4.2.1"/>
-        <PackageReference Include="Scalar.AspNetCore" Version="2.6.3"/>
+        <PackageReference Include="Scalar.AspNetCore" Version="2.6.4" />
         <PackageReference Include="SqlSugarCore" Version="5.1.4.198"/>
     </ItemGroup>
 
