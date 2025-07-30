@@ -4,7 +4,7 @@
 @using SqlSugar
 
 @attribute [Authorize]
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @implements IDisposable
 
