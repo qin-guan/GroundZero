@@ -4,57 +4,55 @@
 @using SqlSugar
 
 @attribute [Authorize]
-@attribute [StreamRendering]
+@rendermode InteractiveServer
 
 @implements IDisposable
 
 @inject NavigationManager Navigation
 @inject ISqlSugarClient Db
 
-@if (Model is null || _editContext is null)
-{
-    return;
-}
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+    @if (Model is not null && _editContext is not null)
+    {
+        <EditForm EditContext="_editContext" OnValidSubmit="Submit" FormName="EditHackathon">
+            <HxInputText Label="Name" Placeholder="Enter hackathon's name" @bind-Value="Model!.Name"/>
+            <HxInputTextArea Label="Description" Placeholder="Something exciting here..."
+                             @bind-Value="Model!.Description"/>
 
-<NavContainer HackathonId="Id" HackathonName="@Model?.Name">
-    <EditForm EditContext="_editContext" OnValidSubmit="Submit" FormName="EditHackathon">
-        <HxInputText Label="Name" Placeholder="Enter hackathon's name" @bind-Value="Model!.Name"/>
-        <HxInputTextArea Label="Description" Placeholder="Something exciting here..."
-                         @bind-Value="Model!.Description"/>
+            <div class="hx-form-group position-relative">
+                <label class="form-label" for="startDate">
+                    Start date
+                </label>
+                <InputDate id="startDate"
+                           aria-describedby="startDateFeedback"
+                           class=@(EventStartDateIsInvalid ? "form-control is-invalid" : "form-control")
+                           @bind-Value="Model!.EventStartDate"
+                />
+                <ValidationMessage id="startDateFeedback" class="invalid-feedback"
+                                   For="() => Model!.EventStartDate"></ValidationMessage>
+            </div>
 
-        <div class="hx-form-group position-relative">
-            <label class="form-label" for="startDate">
-                Start date
-            </label>
-            <InputDate id="startDate"
-                       aria-describedby="startDateFeedback"
-                       class=@(EventStartDateIsInvalid ? "form-control is-invalid" : "form-control")
-                       @bind-Value="Model!.EventStartDate"
-            />
-            <ValidationMessage id="startDateFeedback" class="invalid-feedback"
-                               For="() => Model!.EventStartDate"></ValidationMessage>
-        </div>
+            <div class="hx-form-group position-relative">
+                <label class="form-label" for="endDate">
+                    End date
+                </label>
+                <InputDate id="endDate"
+                           aria-describedby="endDateFeedback"
+                           class=@(EventEndDateIsInvalid ? "form-control is-invalid" : "form-control")
+                           @bind-Value="Model!.EventEndDate"
+                />
+                <ValidationMessage id="endDateFeedback" class="invalid-feedback"
+                                   For="() => Model!.EventEndDate"></ValidationMessage>
+            </div>
 
-        <div class="hx-form-group position-relative">
-            <label class="form-label" for="endDate">
-                End date
-            </label>
-            <InputDate id="endDate"
-                       aria-describedby="endDateFeedback"
-                       class=@(EventEndDateIsInvalid ? "form-control is-invalid" : "form-control")
-                       @bind-Value="Model!.EventEndDate"
-            />
-            <ValidationMessage id="endDateFeedback" class="invalid-feedback"
-                               For="() => Model!.EventEndDate"></ValidationMessage>
-        </div>
+            <HxInputText Label="Venue" Placeholder="Where is your event?" @bind-Value="Model!.Venue"/>
+            <HxInputText Label="Website" Placeholder="Your event website" @bind-Value="Model!.HomepageUri"/>
 
-        <HxInputText Label="Venue" Placeholder="Where is your event?" @bind-Value="Model!.Venue"/>
-        <HxInputText Label="Website" Placeholder="Your event website" @bind-Value="Model!.HomepageUri"/>
-
-        <div>
-            <HxSubmit Color="ThemeColor.Primary">Submit</HxSubmit>
-        </div>
-    </EditForm>
+            <div>
+                <HxSubmit Color="ThemeColor.Primary">Submit</HxSubmit>
+            </div>
+        </EditForm>
+    }
 </NavContainer>
 
 @code {

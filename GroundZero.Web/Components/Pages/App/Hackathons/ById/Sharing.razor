@@ -10,11 +10,6 @@
 @inject NavigationManager Navigation
 @inject ISqlSugarClient Db
 
-@if (ParticipantForm is null || Hackathon is null)
-{
-    return;
-}
-
 <NavContainer HackathonId="Id" HackathonName="@Hackathon!.Name">
     <div class="gap-3 d-flex flex-column">
         <form method="post"
@@ -50,19 +45,21 @@
                     </div>
                 </HxAlert>
             }
-
         </form>
 
-        <EditForm Model="ParticipantForm" FormName="EditHackathonSharingParticipantForm"
-                  OnValidSubmit="SubmitParticipantForm">
-            <div class="d-flex flex-wrap gap-3 align-items-center">
-                <HxInputText Label="Short code" Placeholder="hackomania-2026"
-                             Hint="Participants will use this short code to join your hackathon"
-                             @bind-Value="ParticipantForm!.ShortCode"/>
-                <HxSubmit Color="ThemeColor.Primary">Save</HxSubmit>
-            </div>
-        </EditForm>
-
+        @if (ParticipantForm is not null)
+        {
+            <EditForm Model="ParticipantForm" FormName="EditHackathonSharingParticipantForm"
+                      OnValidSubmit="SubmitParticipantForm">
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <HxInputText Label="Short code" Placeholder="hackomania-2026"
+                                 Hint="Participants will use this short code to join your hackathon"
+                                 @bind-Value="ParticipantForm!.ShortCode"/>
+                    <HxSubmit Color="ThemeColor.Primary">Save</HxSubmit>
+                </div>
+            </EditForm>
+        }
+        
         <HxCard>
             <HeaderTemplate>
                 Organizers
