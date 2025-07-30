@@ -1,0 +1,23 @@
+@page "/_/{ShortCode}"
+@using SqlSugar
+
+@inject ISqlSugarClient Db
+
+@if (Hackathon is not null)
+{
+    <h1>@Hackathon.Name</h1>
+}
+
+@code {
+    [Parameter]
+    public string? ShortCode { get; set; }
+    
+    private Entities.Hackathon? Hackathon { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon = await Db.Queryable<Entities.Hackathon>()
+            .SingleAsync(h => h.ShortCode == ShortCode);
+    }
+
+}

@@ -1,4 +1,4 @@
-﻿@page "/App"
+﻿@page "/Home"
 @using GroundZero.Web.Authentication
 @using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
@@ -16,7 +16,7 @@
     <h5>Your hackathons</h5>
 
     <div>
-        <a class="btn btn-primary" href="/App/Hackathons/New" role="button">New</a>
+        <a class="btn btn-primary" href="/Home/Hackathons/New" role="button">New</a>
     </div>
 </div>
 
@@ -35,7 +35,7 @@
     {
         <tr>
             <td>
-                <a href="/App/Hackathons/@hack.Id">
+                <a href="/Home/Hackathons/@hack.Id">
                     @hack.ShortCode
                 </a>
             </td>

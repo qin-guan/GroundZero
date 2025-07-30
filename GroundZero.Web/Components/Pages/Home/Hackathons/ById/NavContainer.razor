@@ -1,0 +1,30 @@
+<HxBreadcrumb>
+    <HxBreadcrumbItem Href="Home" Text="Hackathons"/>
+    <HxBreadcrumbItem Text=@(HackathonName ?? "Loading...") Active="true"/>
+</HxBreadcrumb>
+
+<HxNav Variant="NavVariant.Pills" CssClass="mb-3">
+    <HxNavLink Href=@($"/Home/Hackathons/{HackathonId}/") Match="NavLinkMatch.All" Text="General"/>
+    <HxNavLink Href=@($"/Home/Hackathons/{HackathonId}/Judges") Text="Judges"/>
+    <HxNavLink Href=@($"/Home/Hackathons/{HackathonId}/Teams") Text="Teams"/>
+    <HxNavLink Href=@($"/Home/Hackathons/{HackathonId}/Participants") Text="Participants"/>
+    <HxNavLink Href=@($"/Home/Hackathons/{HackathonId}/Sharing") Text="Sharing"/>
+    <HxNavLink Href=@($"/Home/Hackathons/{HackathonId}/Advanced") Text="Advanced" CssClass="link-danger"/>
+</HxNav>
+
+<hr/>
+
+@ChildContent
+
+@code {
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? HackathonName { get; set; }
+
+    [Parameter]
+    public Guid? HackathonId { get; set; }
+
+}

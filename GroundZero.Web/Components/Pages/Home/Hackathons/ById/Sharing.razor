@@ -1,4 +1,4 @@
-@page "/App/Hackathons/{id:guid}/Sharing"
+@page "/Home/Hackathons/{id:guid}/Sharing"
 
 @using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
@@ -112,7 +112,7 @@
         Hackathon = await Db.Queryable<Hackathon>().SingleAsync(h => h.Id == Id);
         if (Hackathon is null)
         {
-            Navigation.NavigateTo("App");
+            Navigation.NavigateTo("Home");
             return;
         }
 

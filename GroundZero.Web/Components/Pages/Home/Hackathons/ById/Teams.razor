@@ -1,4 +1,4 @@
-@page "/App/Hackathons/{id:guid}/Judges"
+@page "/Home/Hackathons/{id:guid}/Teams"
 
 @using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
@@ -11,25 +11,26 @@
 @inject ISqlSugarClient Db
 
 <NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
-    haha and then what
 </NavContainer>
 
 @code {
 
     [Parameter]
     public Guid Id { get; set; }
-    
+
     private Hackathon? Hackathon { get; set; }
-    
+
     protected override async Task OnInitializedAsync()
     {
-        Hackathon = await Db.Queryable<Hackathon>().SingleAsync(h => h.Id == Id);
+        Hackathon = await Db.Queryable<Hackathon>()
+            .Includes(h => h.Teams)
+            .SingleAsync(h => h.Id == Id);
+
         if (Hackathon is null)
         {
-            Navigation.NavigateTo("App");
+            Navigation.NavigateTo("Home");
             return;
         }
-
     }
 
 }
