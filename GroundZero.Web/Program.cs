@@ -143,15 +143,15 @@ app.UseAntiforgery();
 app.UseOpenApi(c => c.Path = "/openapi/{documentName}.json");
 
 app.MapScalarApiReference();
-app.MapGet("/Auth/GitHub/Login",
+app.MapGet("/auth/github/login",
     async (context) =>
     {
         await context.ChallengeAsync(new AuthenticationProperties
         {
-            RedirectUri = "/Home"
+            RedirectUri = "/home"
         });
     });
-app.MapGet("/Auth/Logout",
+app.MapGet("/auth/logout",
     async (context) =>
     {
         await context.SignOutAsync(new AuthenticationProperties

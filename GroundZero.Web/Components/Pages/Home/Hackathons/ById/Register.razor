@@ -1,6 +1,5 @@
-@page "/home/hackathons/{id:guid}/participants"
+@page "/home/hackathons/{id:guid}/register"
 
-@using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
 @using SqlSugar
 
@@ -11,6 +10,7 @@
 @inject ISqlSugarClient Db
 
 <NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+    Registerrrrr
 </NavContainer>
 
 @code {
@@ -18,7 +18,7 @@
     [Parameter]
     public Guid Id { get; set; }
 
-    private Hackathon? Hackathon { get; set; }
+    private Entities.Hackathon? Hackathon { get; set; }
 
     protected override async Task OnInitializedAsync()
     {

@@ -1,4 +1,4 @@
-@page "/Home/Hackathons/{id:guid}/Advanced"
+@page "/home/hackathons/{id:guid}/advanced"
 
 @using Microsoft.AspNetCore.Authorization
 @using SqlSugar
@@ -86,7 +86,7 @@
 
         var entity = await Db.Updateable(hackathon).ExecuteReturnEntityAsync();
 
-        Navigation.NavigateTo($"Home/Hackathons/{entity.Id}");
+        Navigation.NavigateTo($"home/hackathons/{entity.Id}");
     }
 
     public class Hackathon
