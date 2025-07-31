@@ -41,6 +41,11 @@
     </p>
 }
 
+<br/>
+
+<a class="btn btn-primary" href=@($"/home/hackathons/{Id}/register/join-team")>Join team</a>
+<a class="btn" href=@($"/home/hackathons/{Id}/register/create-team")>Create team</a>
+
 @code {
 
     [Parameter]
@@ -56,7 +61,6 @@
             Navigation.NavigateTo("home");
             return;
         }
-
         // if (Hackathon.Organizers.Any(o => o.UserId == HttpContextAccessor.HttpContext?.User.GetUserId()))
         // {
         //     Navigation.NavigateTo($"home/hackathons/{Id}");
