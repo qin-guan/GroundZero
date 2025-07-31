@@ -1,4 +1,4 @@
-@page "/Home/Hackathons/{id:guid}/Sharing"
+@page "/home/hackathons/{id:guid}/sharing"
 
 @using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
@@ -10,14 +10,14 @@
 @inject NavigationManager Navigation
 @inject ISqlSugarClient Db
 
-<NavContainer HackathonId="Id" HackathonName="@Hackathon!.Name">
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
     <div class="gap-3 d-flex flex-column">
         <form method="post"
               @formname="EditHackathonSharingIsPublished"
               @onsubmit="SubmitIsPublished">
             <AntiforgeryToken/>
 
-            @if (Hackathon!.IsPublished)
+            @if (Hackathon?.IsPublished is true)
             {
                 <HxAlert Color="ThemeColor.Success" CssClass="mb-0">
                     <h4>
@@ -54,7 +54,7 @@
                 <div class="d-flex flex-wrap gap-3 align-items-center">
                     <HxInputText Label="Short code" Placeholder="hackomania-2026"
                                  Hint="Participants will use this short code to join your hackathon"
-                                 @bind-Value="ParticipantForm!.ShortCode"/>
+                                 @bind-Value="ParticipantForm.ShortCode"/>
                     <HxSubmit Color="ThemeColor.Primary">Save</HxSubmit>
                 </div>
             </EditForm>
@@ -73,7 +73,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach (var user in Organizers)
+                    @foreach (var user in Organizers ?? [])
                     {
                         <tr>
                             <td>
@@ -100,7 +100,7 @@
     public Guid Id { get; set; }
 
     [SupplyParameterFromForm]
-    private List<OrganizerModel> Organizers { get; set; }
+    private List<OrganizerModel>? Organizers { get; set; }
 
     [SupplyParameterFromForm]
     private ParticipantFormModel? ParticipantForm { get; set; }
