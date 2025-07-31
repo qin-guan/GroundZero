@@ -16,7 +16,7 @@
     return;
 }
 
-<h1>@Hackathon.Name</h1>
+<h2>@Hackathon.Name</h2>
 
 @if (!string.IsNullOrWhiteSpace(Hackathon.Description))
 {
@@ -24,7 +24,7 @@
 }
 
 <div class="d-flex items-center gap-2">
-    <a class="btn btn-primary" href=@($"/home/hackathons/{Hackathon.Id}/register")>Register</a>
+    <a class="btn btn-primary" href=@($"/home/hackathons/{Hackathon.Id}/register")>Register using GitHub</a>
 
     @if (!string.IsNullOrWhiteSpace(Hackathon.HomepageUri))
     {

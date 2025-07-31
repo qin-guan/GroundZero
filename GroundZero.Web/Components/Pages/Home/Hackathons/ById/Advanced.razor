@@ -39,7 +39,7 @@
         var entity = await Db.Queryable<Entities.Hackathon>().SingleAsync(h => h.Id == Id);
         if (entity is null)
         {
-            Navigation.NavigateTo("Home");
+            Navigation.NavigateTo("home");
             return;
         }
 

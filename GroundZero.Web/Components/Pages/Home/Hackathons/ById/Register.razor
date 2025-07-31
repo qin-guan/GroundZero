@@ -4,14 +4,42 @@
 @using SqlSugar
 
 @attribute [Authorize]
-@attribute [StreamRendering]
 
 @inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
 @inject ISqlSugarClient Db
 
-<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
-    Registerrrrr
-</NavContainer>
+@if (Hackathon is null)
+{
+    return;
+}
+
+<h2>@Hackathon.Name</h2>
+
+@if (!string.IsNullOrWhiteSpace(Hackathon.Description))
+{
+    <p>@Hackathon.Description</p>
+}
+
+<hr/>
+
+<h3>
+    Date
+</h3>
+<p>
+    @Hackathon.EventStartDate.ToString("d") - @Hackathon.EventEndDate.ToString("d")
+    (@((Hackathon.EventEndDate - Hackathon.EventStartDate).TotalDays.ToString("N0")) days)
+</p>
+
+@if (!string.IsNullOrWhiteSpace(Hackathon.Venue))
+{
+    <h3>
+        Location
+    </h3>
+    <p>
+        @Hackathon.Venue
+    </p>
+}
 
 @code {
 
@@ -22,12 +50,18 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Hackathon = await Db.Queryable<Entities.Hackathon>().SingleAsync(h => h.Id == Id);
+        Hackathon = await Db.Queryable<Entities.Hackathon>().Includes(h => h.Organizers).SingleAsync(h => h.Id == Id);
         if (Hackathon is null)
         {
-            Navigation.NavigateTo("Home");
+            Navigation.NavigateTo("home");
             return;
         }
+
+        // if (Hackathon.Organizers.Any(o => o.UserId == HttpContextAccessor.HttpContext?.User.GetUserId()))
+        // {
+        //     Navigation.NavigateTo($"home/hackathons/{Id}");
+        //     return;
+        // }
     }
 
 }

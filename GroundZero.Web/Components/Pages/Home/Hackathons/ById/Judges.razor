@@ -26,7 +26,7 @@
         Hackathon = await Db.Queryable<Hackathon>().SingleAsync(h => h.Id == Id);
         if (Hackathon is null)
         {
-            Navigation.NavigateTo("Home");
+            Navigation.NavigateTo("home");
             return;
         }
 
