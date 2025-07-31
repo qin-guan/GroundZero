@@ -32,7 +32,8 @@
                     </div>
                 </HxAlert>
             }
-            else
+            
+            @if (Hackathon?.IsPublished is false)
             {
                 <HxAlert Color="ThemeColor.Danger" CssClass="mb-0">
                     <h4>
