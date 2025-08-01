@@ -1,4 +1,4 @@
-@page "/home/organizer/hackathons/{id:guid}/register"
+@page "/home/participant/hackathons/{id:guid}/register"
 
 @using Microsoft.AspNetCore.Authorization
 @using SqlSugar
@@ -43,8 +43,8 @@
 
 <br/>
 
-<a class="btn btn-primary" href=@($"/home/organizer/hackathons/{Id}/register/join-team")>Join team</a>
-<a class="btn" href=@($"/home/organizer/hackathons/{Id}/register/create-team")>Create team</a>
+<a class="btn btn-primary" href=@($"/home/participant/hackathons/{Id}/register/join-team")>Join team</a>
+<a class="btn" href=@($"/home/participant/hackathons/{Id}/register/create-team")>Create team</a>
 
 @code {
 
