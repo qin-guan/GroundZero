@@ -82,6 +82,13 @@
 
     public async Task Submit()
     {
+        var existing = await Db.Queryable<Participant>()
+            .AnyAsync(p => p.UserId == HttpContextAccessor.HttpContext.User.GetUserId());
+        if (existing)
+        {
+            return;
+        }
+
         await Db.InsertNav(new Team
             {
                 Name = Model.Name,
