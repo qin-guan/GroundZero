@@ -12,55 +12,28 @@
 
 <PageTitle>GroundZero | Hackathons</PageTitle>
 
-<div class="d-flex justify-content-between align-items-center">
-    <h5 class="m-0">Your hackathons</h5>
-
-    <div>
-        <a class="btn btn-primary" href="/home/organizer/hackathons/new" role="button">New</a>
-    </div>
+<div>
+    <h5>Participating Hackathons</h5>
+    <p>These are hackathons that you've registered in as a participant!</p>
 </div>
 
 <br/>
 
-<table class="table">
-    <thead>
-    <tr>
-        <th scope="col">Code</th>
-        <th scope="col">Name</th>
-        <th scope="col">Start</th>
-        <th scope="col">End</th>
-        <th scope="col">Website</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var hack in Hackathons)
+<div class="row row-cols-md-2 row-cols-lg-3">
+    @foreach (var hackathon in Hackathons)
     {
-        <tr>
-            <td>
-                <a href="/home/organizer/hackathons/@hack.Id">
-                    @hack.ShortCode
-                </a>
-            </td>
-            
-            <td>
-                @hack.Name
-            </td>
-
-            <td>
-                @hack.EventStartDate.Date.ToShortDateString()
-            </td>
-
-            <td>
-                @hack.EventEndDate.Date.ToShortDateString()
-            </td>
-
-            <td>
-                @hack.HomepageUri
-            </td>
-        </tr>
+        <div class="col">
+            <HxCard CssClass="hx-hackathon-card">
+                <BodyTemplate>
+                    <HxBadge CssClass="mb-3" Color="ThemeColor.Success">Ongoing</HxBadge>
+                    <HxCardTitle>@hackathon.Name</HxCardTitle>
+                    <HxCardText>@hackathon.Description</HxCardText>
+                    <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" Outline="true">Open</HxButton>
+                </BodyTemplate>
+            </HxCard>
+        </div>
     }
-    </tbody>
-</table>
+</div>
 
 @code {
 
@@ -69,8 +42,8 @@
     protected override async Task OnInitializedAsync()
     {
         var userId = HttpContextAccessor.HttpContext!.User.GetUserId();
-        
-        Hackathons = await SqlSugar.Queryable<Organizer>()
+
+        Hackathons = await SqlSugar.Queryable<Participant>()
             .LeftJoin<Hackathon>((o, h) => o.HackathonId == h.Id)
             .Where(o => o.UserId == userId)
             .Select((o, h) => h)
