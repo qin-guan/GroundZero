@@ -1,16 +1,21 @@
 <HxSidebar CssClass="sticky-top bg-body-secondary">
     <HeaderTemplate>
-        <strong>GroundZero</strong>
+        <HxSidebarBrand BrandName="GroundZero" BrandNameShort="G"/>
     </HeaderTemplate>
 
     <ItemsTemplate>
-        <HxSidebarItem Text="Hackathons" Icon="@BootstrapIcon.HouseDoorFill">
+        <HxSidebarItem Text="Hackathons" Icon="@BootstrapIcon.HouseDoorFill" ExpandOnMatch="true">
             <HxSidebarItem Text="Organizing" Href="/home/organizer" Match="NavLinkMatch.Prefix"/>
             <HxSidebarItem Text="Participating" Href="/home/participant" Match="NavLinkMatch.Prefix"/>
         </HxSidebarItem>
     </ItemsTemplate>
 
     <FooterTemplate>
-        <HxSidebarFooter Text="Logout" Href="/auth/logout" Icon="@BootstrapIcon.PersonCircle"/>
+        <div class="d-flex flex-column gap-2">
+            <HxSidebarFooter TextCssClass="@(context.SidebarCollapsed ? "d-md-none" : null)" Text="Settings"
+                             Href="/home/settings" Icon="@BootstrapIcon.GearFill"/>
+            <HxSidebarFooter TextCssClass="@(context.SidebarCollapsed ? "d-md-none" : null)" Text="Logout"
+                             Href="/auth/logout" Icon="@BootstrapIcon.PersonCircle"/>
+        </div>
     </FooterTemplate>
 </HxSidebar>

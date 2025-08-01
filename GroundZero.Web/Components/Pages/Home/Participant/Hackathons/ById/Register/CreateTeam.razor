@@ -1,4 +1,4 @@
-@page "/home/organizer/hackathons/{id:guid}/register/join-team"
+@page "/home/participant/hackathons/{id:guid}/register/create-team"
 
 @using GroundZero.Web.Authentication
 @using GroundZero.Web.Entities
@@ -45,9 +45,10 @@
 
 @if (Model is not null)
 {
-    <EditForm OnValidSubmit="Submit" EditContext="_editContext" FormName="HackathonJoinExistingTeam">
-        <HxInputText Label="Join existing team" @bind-Value="Model!.TeamJoinCode"></HxInputText>
-        <HxSubmit Color="ThemeColor.Primary">Join!</HxSubmit>
+    <EditForm Model="Model" OnValidSubmit="Submit" FormName=@(nameof(RegisterModel))>
+        <HxInputText Label="Name" @bind-Value="Model!.Name"></HxInputText>
+        <HxInputTextArea Label="Description" @bind-Value="Model!.Description"></HxInputTextArea>
+        <HxSubmit Text="Create team"></HxSubmit>
     </EditForm>
 }
 
@@ -61,9 +62,6 @@
     [SupplyParameterFromForm]
     public RegisterModel? Model { get; set; }
 
-    private EditContext? _editContext;
-    private ValidationMessageStore? _messageStore;
-
     protected override async Task OnInitializedAsync()
     {
         Hackathon = await Db.Queryable<Entities.Hackathon>().Includes(h => h.Organizers).SingleAsync(h => h.Id == Id);
@@ -75,9 +73,6 @@
 
         Model ??= new RegisterModel();
 
-        _editContext = new EditContext(Model);
-        _messageStore = new ValidationMessageStore(_editContext);
-
         // if (Hackathon.Organizers.Any(o => o.UserId == HttpContextAccessor.HttpContext?.User.GetUserId()))
         // {
         //     Navigation.NavigateTo($"home/hackathons/{Id}");
@@ -87,26 +82,30 @@
 
     public async Task Submit()
     {
-        var team = await Db.Queryable<Entities.Team>()
-            .SingleAsync(t => t.HackathonId == Id && t.JoinCode == Model!.TeamJoinCode);
-
-        if (team is null)
-        {
-            _messageStore?.Add(() => Model!.TeamJoinCode, "Invalid join code");
-            return;
-        }
-
-        await Db.Insertable(new Participant
-        {
-            UserId = HttpContextAccessor.HttpContext?.User.GetUserId() ?? throw new Exception(),
-            HackathonId = Id,
-            TeamId = team.Id
-        }).ExecuteCommandAsync();
+        await Db.InsertNav(new Team
+            {
+                Name = Model.Name,
+                Description = Model.Description,
+                Active = true,
+                HackathonId = Hackathon.Id,
+                Members =
+                [
+                    new Participant
+                    {
+                        UserId = HttpContextAccessor.HttpContext.User.GetUserId(),
+                        HackathonId = Hackathon.Id,
+                    }
+                ]
+            })
+            .Include(t => t.Members)
+            .ExecuteCommandAsync();
     }
 
     public class RegisterModel
     {
-        public string? TeamJoinCode { get; set; }
+        public string? Name { get; set; }
+
+        public string? Description { get; set; }
     }
 
 }
