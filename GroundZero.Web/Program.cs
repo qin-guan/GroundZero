@@ -148,7 +148,7 @@ app.MapGet("/auth/github/login",
     {
         await context.ChallengeAsync(new AuthenticationProperties
         {
-            RedirectUri = "/home"
+            RedirectUri = "/home/organizer"
         });
     });
 app.MapGet("/auth/logout",

@@ -10,7 +10,7 @@
 @if (Hackathon is null)
 {
     <h1>Hackathon not found :(</h1>
-    <a href="/home/hackathons/new">Create your own</a>
+    <a href="/home/organizer/hackathons/new">Create your own</a>
     <span>hackathon instead?</span>
 
     return;
@@ -24,7 +24,7 @@
 }
 
 <div class="d-flex items-center gap-2">
-    <a class="btn btn-primary" href=@($"/home/hackathons/{Hackathon.Id}/register")>Register using GitHub</a>
+    <a class="btn btn-primary" href=@($"/home/participant/hackathons/{Hackathon.Id}/register")>Register using GitHub</a>
 
     @if (!string.IsNullOrWhiteSpace(Hackathon.HomepageUri))
     {

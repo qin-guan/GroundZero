@@ -32,4 +32,20 @@
         <ProjectReference Include="..\GroundZero.Web.Client\GroundZero.Web.Client.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Components\Pages\Home\Organizer\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Components\Pages\Home\Organizer\Hackathons\App.razor" />
+      <AdditionalFiles Include="Components\Pages\Home\Organizer\Hackathons\ById\Advanced.razor" />
+      <AdditionalFiles Include="Components\Pages\Home\Organizer\Hackathons\ById\General.razor" />
+      <AdditionalFiles Include="Components\Pages\Home\Organizer\Hackathons\ById\Judges.razor" />
+      <AdditionalFiles Include="Components\Pages\Home\Organizer\Hackathons\ById\NavContainer.razor" />
+      <AdditionalFiles Include="Components\Pages\Home\Organizer\Hackathons\ById\Participants.razor" />
+      <AdditionalFiles Include="Components\Pages\Home\Organizer\Hackathons\ById\Sharing.razor" />
+      <AdditionalFiles Include="Components\Pages\Home\Organizer\Hackathons\ById\Teams.razor" />
+      <AdditionalFiles Include="Components\Pages\Home\Organizer\Hackathons\New.razor" />
+    </ItemGroup>
+
 </Project>
