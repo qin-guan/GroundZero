@@ -1,4 +1,4 @@
-@page "/home/organizer/hackathons/{id:guid}/judges"
+@page "/home/organizer/hackathons/{id:guid}/judges/create"
 
 @using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
@@ -11,17 +11,7 @@
 @inject ISqlSugarClient Db
 
 <NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
-    <div class="d-flex justify-content-between align-items-center">
-        <strong>Judges</strong>
-        <a class="btn btn-primary" href=@($"/home/organizer/hackathons/{Id}/judges/create")>Add</a>
-    </div>
-        
-    <div class="mt-2">
-        @if (Hackathon?.Judges.Count == 0)
-        {
-            <span>Nothing here yet, add a judge!</span>
-        }
-    </div>
+    Add someting here
 </NavContainer>
 
 @code {
@@ -36,7 +26,7 @@
         Hackathon = await Db.Queryable<Hackathon>()
             .Includes(h => h.Judges)
             .SingleAsync(h => h.Id == Id);
-        
+
         if (Hackathon is null)
         {
             Navigation.NavigateTo("home");
