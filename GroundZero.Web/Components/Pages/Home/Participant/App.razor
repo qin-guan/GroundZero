@@ -5,7 +5,6 @@
 @using SqlSugar
 
 @attribute [Authorize]
-@attribute [StreamRendering]
 
 @inject ISqlSugarClient SqlSugar
 @inject IHttpContextAccessor HttpContextAccessor
@@ -17,23 +16,32 @@
     <p>These are hackathons that you've registered in as a participant!</p>
 </div>
 
-<br/>
+@if (Hackathons.Count == 0)
+{
+    <HxAlert Color="ThemeColor.Info">Nothing here yet! Join a hackathon and change the world with your ideas!</HxAlert>
+}
+else
+{
+    <br/>
+    
+    <div class="row row-cols-md-2 row-cols-lg-3">
+    
+        @foreach (var hackathon in Hackathons)
+        {
+            <div class="col">
+                <HxCard CssClass="hx-hackathon-card">
+                    <BodyTemplate>
+                        <HxBadge CssClass="mb-3" Color="ThemeColor.Success">Ongoing</HxBadge>
+                        <HxCardTitle>@hackathon.Name</HxCardTitle>
+                        <HxCardText>@hackathon.Description</HxCardText>
+                        <a class="btn btn-outline btn-primary" href=@($"/home/participant/hackathons/{hackathon.Id}")>Open</a>
+                    </BodyTemplate>
+                </HxCard>
+            </div>
+        }
+    </div>
 
-<div class="row row-cols-md-2 row-cols-lg-3">
-    @foreach (var hackathon in Hackathons)
-    {
-        <div class="col">
-            <HxCard CssClass="hx-hackathon-card">
-                <BodyTemplate>
-                    <HxBadge CssClass="mb-3" Color="ThemeColor.Success">Ongoing</HxBadge>
-                    <HxCardTitle>@hackathon.Name</HxCardTitle>
-                    <HxCardText>@hackathon.Description</HxCardText>
-                    <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" Outline="true">Open</HxButton>
-                </BodyTemplate>
-            </HxCard>
-        </div>
-    }
-</div>
+}
 
 @code {
 
