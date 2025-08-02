@@ -63,8 +63,9 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
-        
+
       - name: Deploy
+        if: ${{ github.event_name != 'pull_request' }}
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.HOST }}
