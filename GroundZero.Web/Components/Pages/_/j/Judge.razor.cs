@@ -19,6 +19,7 @@ public partial class Judge : ComponentBase
     public required Guid Secret { get; init; }
 
     private bool IsPending { get; set; } = true;
+    private bool SubmissionIsPending { get; set; }
 
     private Entities.Judge JudgeJudge { get; set; } = null!;
 
@@ -135,6 +136,8 @@ public partial class Judge : ComponentBase
         if (JudgeJudge.NextTeamId == null)
             throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
 
+        SubmissionIsPending = true;
+
         await Db.Insertable(new TeamJudgeIgnored
         {
             TeamId = JudgeJudge.NextTeamId.Value,
@@ -153,12 +156,16 @@ public partial class Judge : ComponentBase
         await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
 
         await UpdateNext();
+        
+        SubmissionIsPending = false;
     }
 
     private async Task BeginSkip()
     {
         if (JudgeJudge.NextTeamId == null)
             throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
+        
+        SubmissionIsPending = true;
 
         await Db.Insertable(new TeamJudgeIgnored
         {
@@ -167,16 +174,19 @@ public partial class Judge : ComponentBase
         }).ExecuteCommandAsync();
 
         JudgeJudge.NextTeamId = null;
-
         await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
 
-        Navigation.NavigateTo($"/_/j/{Secret}/judge", true);
+        await UpdateNext();
+        
+        SubmissionIsPending = false;
     }
 
     private async Task VoteSkip()
     {
         if (JudgeJudge.NextTeamId == null)
             throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
+        
+        SubmissionIsPending = true;
 
         await Db.Insertable(new TeamJudgeIgnored
         {
@@ -185,10 +195,13 @@ public partial class Judge : ComponentBase
         }).ExecuteCommandAsync();
 
         await UpdateNext();
+        
+        SubmissionIsPending = false;
     }
 
     private async Task Vote(bool previousWon)
     {
+        SubmissionIsPending = true;
         if (JudgeJudge.PreviousTeam?.Active == true && JudgeJudge.NextTeam?.Active == true)
         {
             var winner = previousWon ? JudgeJudge.PreviousTeam : JudgeJudge.NextTeam;
@@ -235,6 +248,8 @@ public partial class Judge : ComponentBase
         }).ExecuteCommandAsync();
 
         await UpdateNext();
+        
+        SubmissionIsPending = false;
     }
 
     private async Task UpdateNext()

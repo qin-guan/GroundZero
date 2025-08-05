@@ -1,15 +1,15 @@
 @page "/_/j/{secret:guid}/judge"
 
 @using GroundZero.Web.Client.Layout
-@using SqlSugar
 
 @layout LandingLayout
-@rendermode InteractiveServer
-
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @if (IsPending)
 {
-    <HxSpinner/>
+    <div class="h-100 d-flex justify-content-center align-items-center">
+        <HxSpinner/>
+    </div>
 }
 else if (Hackathon is null)
 {
@@ -17,47 +17,144 @@ else if (Hackathon is null)
     <a href="/home/organizer/hackathons/new">Create your own</a>
     <span>hackathon instead?</span>
 }
-else if (JudgeJudge.NextTeamId is null)
+else if (JudgeJudge.NextTeamId is null || JudgeJudge.NextTeam is null)
 {
-    <p>No team to judge yet! Hang around for a while?</p>
+    <div class="vstack gap-3 mx-auto" style="max-width: 500px">
+        <HxCard CssClass="bg-success">
+            <BodyTemplate>
+                <strong>Your Task</strong>
+                <br/>
+                <span>
+                    <i>Nothing for now!</i> Hang around and chill~
+                </span>
+            </BodyTemplate>
+        </HxCard>
+    </div>
 }
 else
 {
-    <div class="vstack">
-        <HxCard>
-            <BodyTemplate>
-                @JudgeJudge.NextTeam!.Name
-                <br/>
-                @JudgeJudge.NextTeam!.Description
+    <HxProgressIndicator InProgress="@SubmissionIsPending">
+        <div class="vstack gap-3 mx-auto" style="max-width: 500px">
+            <HxCard CssClass="bg-success">
+                <BodyTemplate>
+                    <strong>Your Task</strong>
+                    <br/>
+                    <span>
+                    Please head to your <strong>current team</strong>
+                </span>
+                </BodyTemplate>
+            </HxCard>
 
+            <HxCard HeaderCssClass="bg-primary" BodyCssClass="vstack gap-2">
+                <HeaderTemplate>Current team</HeaderTemplate>
+                <BodyTemplate>
+                    <div class="hstack gap-3">
+                        <strong>
+                            Name
+                        </strong>
+                        <span class="ms-auto">
+                        @JudgeJudge.NextTeam.Name
+                    </span>
+                    </div>
+
+                    <div class="hstack gap-3">
+                        <strong>
+                            Location
+                        </strong>
+                        <span class="ms-auto">
+                        @JudgeJudge.NextTeam.Location
+                    </span>
+                    </div>
+
+                    <div class="hstack gap-3">
+                        <strong>
+                            DevPost
+                        </strong>
+                        <a class="ms-auto" href="@JudgeJudge.NextTeam.DevpostUri" target="_blank">
+                            Open
+                        </a>
+                    </div>
+
+                    <div class="hstack gap-3">
+                        <strong>
+                            Repository
+                        </strong>
+                        <a class="ms-auto" href="@JudgeJudge.NextTeam.RepositoryUri" target="_blank">
+                            Open
+                        </a>
+                    </div>
+
+                    <HxInputTextArea
+                        Label="Description"
+                        ValueExpression="() => JudgeJudge.NextTeam.Description"
+                        Value="@JudgeJudge.NextTeam.Description"
+                        Enabled="false"
+                    />
+                </BodyTemplate>
+            </HxCard>
+
+            @if (JudgeJudge.PreviousTeamId is not null && JudgeJudge.PreviousTeam is not null)
+            {
+                <HxCard HeaderCssClass="bg-secondary" BodyCssClass="vstack gap-2">
+                    <HeaderTemplate>Previous team</HeaderTemplate>
+                    <BodyTemplate>
+                        <div class="hstack gap-3">
+                            <strong>
+                                Name
+                            </strong>
+                            <span class="ms-auto">
+                        @JudgeJudge.PreviousTeam.Name
+                    </span>
+                        </div>
+
+                        <HxInputTextArea
+                            Label="Description"
+                            ValueExpression="() => JudgeJudge.PreviousTeam.Description"
+                            Value="@JudgeJudge.PreviousTeam.Description"
+                            Enabled="false"
+                        />
+                    </BodyTemplate>
+                </HxCard>
+            }
+
+
+            <div class="vstack gap-2 my-4">
                 @if (JudgeJudge.PreviousTeamId is null)
                 {
-                    <HxButton @onclick="BeginContinue" Text="Continue"></HxButton>
+                    <HxButton Color="ThemeColor.Primary" @onclick="BeginContinue" Text="Continue"></HxButton>
                 }
                 else
                 {
-                    <HxButton @onclick="() => Vote(false)" Text="Current better!"></HxButton>
+                    <HxButtonGroup Orientation="ButtonGroupOrientation.Vertical">
+                        <HxButton
+                            Size="ButtonSize.Large"
+                            Color="ThemeColor.Primary"
+                            @onclick="() => Vote(false)"
+                            Text="Current better!"
+                        />
+                        <HxButton
+                            Size="ButtonSize.Large"
+                            Color="ThemeColor.Secondary"
+                            @onclick="() => Vote(true)"
+                            Text="Previous better!"
+                        />
+                    </HxButtonGroup>
                 }
-            </BodyTemplate>
-        </HxCard>
 
-        <HxCard>
-            <BodyTemplate>
-                <HxButton @onclick="() => JudgeJudge.PreviousTeamId is null ? BeginSkip() : VoteSkip()"
-                          Text="Skip"></HxButton>
-            </BodyTemplate>
-        </HxCard>
+                <HxButton
+                    @onclick="() => JudgeJudge.PreviousTeamId is null ? BeginSkip() : VoteSkip()"
+                    Text="Skip"
+                />
+            </div>
 
-        @if (JudgeJudge.PreviousTeamId is not null)
-        {
-            <HxCard>
-                <BodyTemplate>
-                    @JudgeJudge.PreviousTeam!.Name
-                    <br/>
-                    @JudgeJudge.PreviousTeam!.Description
-                    <HxButton @onclick="() => Vote(true)" Text="Previous better!"></HxButton>
-                </BodyTemplate>
-            </HxCard>
-        }
-    </div>
+            <HxAccordion>
+                <HxAccordionItem>
+                    <HeaderTemplate>Help</HeaderTemplate>
+                    <BodyTemplate>
+                        Some very helpful message here.
+                    </BodyTemplate>
+                </HxAccordionItem>
+            </HxAccordion>
+        </div>
+    </HxProgressIndicator>
 }
