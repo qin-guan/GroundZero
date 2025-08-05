@@ -1,0 +1,306 @@
+@page "/_/j/{secret:guid}/judge"
+@using GroundZero.Gavel
+@using GroundZero.Web.Client.Layout
+@using GroundZero.Web.Entities
+@using MoreLinq
+@using SqlSugar
+
+@layout LandingLayout
+@rendermode InteractiveServer
+
+@inject ISqlSugarClient Db
+@inject NavigationManager Navigation
+
+@if (IsPending)
+{
+    <HxSpinner/>
+}
+else if (Hackathon is null)
+{
+    <h1>Hackathon not found :(</h1>
+    <a href="/home/organizer/hackathons/new">Create your own</a>
+    <span>hackathon instead?</span>
+}
+else if (JudgeJudge.NextTeamId is null)
+{
+    <p>No team to judge yet! Hang around for a while?</p>
+}
+else
+{
+    <div class="vstack">
+        <HxCard>
+            <BodyTemplate>
+                @JudgeJudge.NextTeam!.Name
+                <br/>
+                @JudgeJudge.NextTeam!.Description
+
+                @if (JudgeJudge.PreviousTeamId is null)
+                {
+                    <HxButton @onclick="BeginContinue" Text="Continue"></HxButton>
+                }
+                else
+                {
+                    <HxButton @onclick="() => Vote(false)" Text="Current better!"></HxButton>
+                }
+            </BodyTemplate>
+        </HxCard>
+
+        <HxCard>
+            <BodyTemplate>
+                <HxButton @onclick="() => JudgeJudge.PreviousTeamId is null ? BeginSkip() : VoteSkip()"
+                          Text="Skip"></HxButton>
+            </BodyTemplate>
+        </HxCard>
+
+        @if (JudgeJudge.PreviousTeamId is not null)
+        {
+            <HxCard>
+                <BodyTemplate>
+                    @JudgeJudge.PreviousTeam!.Name
+                    <br/>
+                    @JudgeJudge.PreviousTeam!.Description
+                    <HxButton @onclick="() => Vote(true)" Text="Previous better!"></HxButton>
+                </BodyTemplate>
+            </HxCard>
+        }
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public Guid? Secret { get; set; }
+
+    private bool IsPending { get; set; } = true;
+
+    private Entities.Judge JudgeJudge { get; set; } = null!;
+
+    private Hackathon? Hackathon { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchData();
+        await MaybeInitAnnotator();
+        await FetchData();
+        IsPending = false;
+    }
+
+    public async Task MaybeInitAnnotator()
+    {
+        if (JudgeJudge.NextTeamId is not null)
+        {
+            return;
+        }
+
+        var next = await ChooseNext();
+        if (next is not null)
+        {
+            JudgeJudge.NextTeamId = next.Id;
+            JudgeJudge.NextTeam = next;
+            await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
+        }
+    }
+
+    public async Task<List<Team>> PreferredItems()
+    {
+        List<Team> availableItems = [];
+
+        var ignoredTeams = await Db.Queryable<TeamJudgeIgnored>()
+            .Where(t => t.JudgeId == JudgeJudge.Id)
+            .Select(t => t.TeamId)
+            .ToListAsync();
+
+        if (ignoredTeams.Count > 0)
+        {
+            availableItems.AddRange(
+                await Db.Queryable<Team>()
+                    .Includes(t => t.JudgesViewed)
+                    .Where(t => t.Active &&
+                                t.HackathonId == JudgeJudge.HackathonId &&
+                                !ignoredTeams.Contains(t.Id)
+                    )
+                    .ToListAsync()
+            );
+        }
+        else
+        {
+            availableItems.AddRange(
+                await Db.Queryable<Team>()
+                    .Includes(t => t.JudgesViewed)
+                    .Where(t => t.Active &&
+                                t.HackathonId == JudgeJudge.HackathonId
+                    )
+                    .ToListAsync()
+            );
+        }
+
+        List<Team> teams = [];
+        var prioritizedTeams = availableItems.Where(t => t.Prioritized).ToList();
+
+        teams.AddRange(prioritizedTeams.Count > 0 ? prioritizedTeams : availableItems);
+
+        var judges = await Db.Queryable<Entities.Judge>()
+            .Includes(j => j.ViewedTeams)
+            .Where(j => j.HackathonId == JudgeJudge.HackathonId && j.Active && j.NextTeamId != null && j.UpdatedAt != null)
+            .ToListAsync();
+
+        var busy = judges.Where(j => (DateTimeOffset.Now - j.UpdatedAt) > TimeSpan.FromMinutes(1)).Select(j => j.NextTeamId).ToList();
+        var nonBusy = teams.Where(t => !busy.Contains(t.Id)).ToList();
+
+        var preferred = nonBusy.Count > 0 ? nonBusy : teams;
+
+        var lessSeen = preferred.Where(t => t.JudgesViewed.Count < 3).ToList();
+
+        return lessSeen.Count > 0 ? lessSeen : preferred;
+    }
+
+    public async Task<Team?> ChooseNext()
+    {
+        var teams = (await PreferredItems()).Shuffle().ToList();
+        if (teams.Count == 0) return null;
+
+        if (JudgeJudge.PreviousTeamId is null)
+        {
+            return teams.First();
+        }
+
+        if (Random.Shared.NextDouble() < CrowdBt.Epsilon)
+        {
+            return teams.First();
+        }
+
+        return CrowdBt.Argmax(
+            i => CrowdBt.ExpectedInformationGain(
+                JudgeJudge.Alpha,
+                JudgeJudge.Beta,
+                JudgeJudge.PreviousTeam!.Mu,
+                JudgeJudge.PreviousTeam!.SigmaSq,
+                i.Mu,
+                i.SigmaSq
+            ),
+            teams
+        );
+    }
+
+    public async Task BeginContinue()
+    {
+        await Db.Insertable(new TeamJudgeIgnored
+        {
+            TeamId = JudgeJudge?.NextTeamId ?? throw new ArgumentNullException(),
+            JudgeId = JudgeJudge.Id
+        }).ExecuteCommandAsync();
+
+        await Db.Insertable(new TeamJudgeViewed
+        {
+            TeamId = JudgeJudge?.NextTeamId ?? throw new ArgumentNullException(),
+            JudgeId = JudgeJudge.Id
+        }).ExecuteCommandAsync();
+
+        JudgeJudge.PreviousTeamId = JudgeJudge.NextTeamId;
+
+        await Db.Updateable(JudgeJudge).ExecuteReturnEntityAsync();
+
+        await UpdateNext();
+    }
+
+    public async Task BeginSkip()
+    {
+        await Db.Insertable(new TeamJudgeIgnored
+        {
+            TeamId = JudgeJudge?.NextTeamId ?? throw new ArgumentNullException(),
+            JudgeId = JudgeJudge.Id
+        }).ExecuteCommandAsync();
+
+        JudgeJudge.NextTeamId = null;
+
+        await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
+        Navigation.NavigateTo($"/_/j/{Secret}/judge", true);
+    }
+
+    public async Task VoteSkip()
+    {
+        var skippedId = JudgeJudge.NextTeamId ?? throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
+        await Db.Insertable(new TeamJudgeIgnored { TeamId = skippedId, JudgeId = JudgeJudge.Id }).ExecuteCommandAsync();
+        await UpdateNext();
+    }
+
+    public async Task Vote(bool previousWon)
+    {
+        if (JudgeJudge.PreviousTeam?.Active == true && JudgeJudge.NextTeam?.Active == true)
+        {
+            var winner = previousWon ? JudgeJudge.PreviousTeam! : JudgeJudge.NextTeam!;
+            var loser = previousWon ? JudgeJudge.NextTeam! : JudgeJudge.PreviousTeam!;
+
+            var e = CrowdBt.Update(JudgeJudge.Alpha, JudgeJudge.Beta, winner.Mu, winner.SigmaSq, loser.Mu, loser.SigmaSq);
+
+            JudgeJudge.Alpha = e.Item1;
+            JudgeJudge.Beta = e.Item2;
+            winner.Mu = e.Item3;
+            winner.SigmaSq = e.Item4;
+            loser.Mu = e.Item5;
+            loser.SigmaSq = e.Item6;
+
+            await Db.Updateable(new List<Team> { winner, loser }).ExecuteCommandAsync();
+            await Db.Insertable(new Decision
+            {
+                JudgeId = JudgeJudge.Id,
+                WinnerId = winner.Id,
+                LoserId = loser.Id
+            }).ExecuteCommandAsync();
+        }
+
+        await Db.Insertable(new TeamJudgeViewed
+        {
+            TeamId = JudgeJudge?.NextTeamId ?? throw new ArgumentNullException(),
+            JudgeId = JudgeJudge.Id
+        }).ExecuteCommandAsync();
+
+        JudgeJudge.PreviousTeamId = JudgeJudge.NextTeamId;
+
+        await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
+
+        await Db.Insertable(new TeamJudgeIgnored
+        {
+            TeamId = JudgeJudge?.PreviousTeamId ?? throw new ArgumentNullException(),
+            JudgeId = JudgeJudge.Id
+        }).ExecuteCommandAsync();
+
+        await UpdateNext();
+    }
+
+    public async Task FetchData()
+    {
+        var entity = await Db.Queryable<Entities.Judge>()
+            .Includes(j => j.NextTeam!, t => t.JudgesViewed)
+            .Includes(j => j.PreviousTeam)
+            .Includes(j => j.IgnoredTeams)
+            .Includes(j => j.ViewedTeams)
+            .LeftJoin<Hackathon>((j, h) => j.HackathonId == h.Id)
+            .Where((j) => j.Secret == Secret)
+            .Select((j, h) => new { Judge = j, Hackathon = h, j.NextTeam, j.PreviousTeam, j.IgnoredTeams, j.ViewedTeams })
+            .SingleAsync();
+
+        JudgeJudge = entity.Judge;
+        JudgeJudge.NextTeam = entity.NextTeam;
+        JudgeJudge.PreviousTeam = entity.PreviousTeam;
+        JudgeJudge.IgnoredTeams = entity.IgnoredTeams;
+        JudgeJudge.ViewedTeams = entity.ViewedTeams;
+        Hackathon = entity.Hackathon;
+    }
+
+    public async Task UpdateNext()
+    {
+        await FetchData();
+
+        var next = await ChooseNext();
+        JudgeJudge.NextTeamId = next?.Id;
+        JudgeJudge.UpdatedAt = DateTimeOffset.Now;
+        await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
+
+        if (next is not null)
+        {
+            JudgeJudge.NextTeam = next;
+        }
+    }
+
+}

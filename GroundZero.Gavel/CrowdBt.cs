@@ -142,7 +142,7 @@ public class CrowdBt
 
         var variance = exptSq - Math.Pow(expt, 2);
         var updatedAlpha = (expt - exptSq) * expt / variance;
-        var updatedBeta = (exptSq - exptSq) * (1 - expt) / variance;
+        var updatedBeta = (expt - exptSq) * (1 - expt) / variance;
 
         return (updatedAlpha, updatedBeta, c);
     }
