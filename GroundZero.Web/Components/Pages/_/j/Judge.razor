@@ -3,9 +3,10 @@
 @using GroundZero.Web.Client.Layout
 
 @layout LandingLayout
-@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [StreamRendering]
+@rendermode @(new InteractiveServerRenderMode(prerender: true))
 
-@if (IsPending)
+@if (_isPending)
 {
     <div class="h-100 d-flex justify-content-center align-items-center">
         <HxSpinner/>

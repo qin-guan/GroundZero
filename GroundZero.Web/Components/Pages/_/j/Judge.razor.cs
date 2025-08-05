@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using GroundZero.Gavel;
 using GroundZero.Web.Entities;
 using Microsoft.AspNetCore.Components;
+using Microsoft.IdentityModel.Logging;
 using MoreLinq;
 using SqlSugar;
 
@@ -13,44 +14,94 @@ public partial class Judge : ComponentBase
     public required ISqlSugarClient Db { get; init; }
 
     [Inject]
+    public required PersistentComponentState ApplicationState { get; init; }
+
+    [Inject]
     public required NavigationManager Navigation { get; init; }
 
     [Parameter]
     public required Guid Secret { get; init; }
 
-    private bool IsPending { get; set; } = true;
+    private bool _isPending = true;
+
     private bool SubmissionIsPending { get; set; }
 
     private Entities.Judge JudgeJudge { get; set; } = null!;
 
     private Hackathon? Hackathon { get; set; }
 
+    private PersistingComponentStateSubscription persistingSubscription;
+
     protected override async Task OnInitializedAsync()
     {
-        await FetchData();
+        await FetchData(true);
         await MaybeInitAnnotator();
-        IsPending = false;
+        _isPending = false;
+        persistingSubscription = ApplicationState.RegisterOnPersisting(PersistCount);
+    }
+    
+    private Task PersistCount()
+    {
+        ApplicationState.PersistAsJson(nameof(JudgeJudge), JudgeJudge);
+        ApplicationState.PersistAsJson(nameof(Hackathon), Hackathon);
+
+        return Task.CompletedTask;
     }
 
-    private async Task FetchData()
+    private async Task FetchData(bool initial = false)
     {
-        var entity = await Db.Queryable<Entities.Judge>()
-            .Includes(j => j.NextTeam!, t => t.JudgesViewed)
-            .Includes(j => j.PreviousTeam)
-            .Includes(j => j.IgnoredTeams)
-            .Includes(j => j.ViewedTeams)
-            .LeftJoin<Hackathon>((j, h) => j.HackathonId == h.Id)
-            .Where((j) => j.Secret == Secret)
-            .Select((j, h) => new
-                { Judge = j, Hackathon = h, j.NextTeam, j.PreviousTeam, j.IgnoredTeams, j.ViewedTeams })
-            .SingleAsync();
+        if (initial)
+        {
+            Console.WriteLine("initial");
+            if (!ApplicationState.TryTakeFromJson<Entities.Judge>(nameof(JudgeJudge), out var judgeJudge))
+            {
+                Console.WriteLine("taking from db");
+                var entity = await Db.Queryable<Entities.Judge>()
+                    .Includes(j => j.NextTeam!, t => t.JudgesViewed)
+                    .Includes(j => j.PreviousTeam)
+                    .Includes(j => j.IgnoredTeams)
+                    .Includes(j => j.ViewedTeams)
+                    .LeftJoin<Hackathon>((j, h) => j.HackathonId == h.Id)
+                    .Where((j) => j.Secret == Secret)
+                    .Select((j, h) => new
+                        { Judge = j, Hackathon = h, j.NextTeam, j.PreviousTeam, j.IgnoredTeams, j.ViewedTeams })
+                    .SingleAsync();
 
-        JudgeJudge = entity.Judge;
-        JudgeJudge.NextTeam = entity.NextTeam;
-        JudgeJudge.PreviousTeam = entity.PreviousTeam;
-        JudgeJudge.IgnoredTeams = entity.IgnoredTeams;
-        JudgeJudge.ViewedTeams = entity.ViewedTeams;
-        Hackathon = entity.Hackathon;
+                JudgeJudge = entity.Judge;
+                JudgeJudge.NextTeam = entity.NextTeam;
+                JudgeJudge.PreviousTeam = entity.PreviousTeam;
+                JudgeJudge.IgnoredTeams = entity.IgnoredTeams;
+                JudgeJudge.ViewedTeams = entity.ViewedTeams;
+                Hackathon = entity.Hackathon;
+            }
+            else
+            {
+                Console.WriteLine("parsing");
+                ApplicationState.TryTakeFromJson<Entities.Hackathon>(nameof(Hackathon), out var hackathon);
+                JudgeJudge = judgeJudge!;
+                Hackathon = hackathon!;
+            }
+        }
+        else
+        {
+            var entity = await Db.Queryable<Entities.Judge>()
+                .Includes(j => j.NextTeam!, t => t.JudgesViewed)
+                .Includes(j => j.PreviousTeam)
+                .Includes(j => j.IgnoredTeams)
+                .Includes(j => j.ViewedTeams)
+                .LeftJoin<Hackathon>((j, h) => j.HackathonId == h.Id)
+                .Where((j) => j.Secret == Secret)
+                .Select((j, h) => new
+                    { Judge = j, Hackathon = h, j.NextTeam, j.PreviousTeam, j.IgnoredTeams, j.ViewedTeams })
+                .SingleAsync();
+
+            JudgeJudge = entity.Judge;
+            JudgeJudge.NextTeam = entity.NextTeam;
+            JudgeJudge.PreviousTeam = entity.PreviousTeam;
+            JudgeJudge.IgnoredTeams = entity.IgnoredTeams;
+            JudgeJudge.ViewedTeams = entity.ViewedTeams;
+            Hackathon = entity.Hackathon;
+        }
     }
 
     private async Task MaybeInitAnnotator()
@@ -156,7 +207,7 @@ public partial class Judge : ComponentBase
         await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
 
         await UpdateNext();
-        
+
         SubmissionIsPending = false;
     }
 
@@ -164,7 +215,7 @@ public partial class Judge : ComponentBase
     {
         if (JudgeJudge.NextTeamId == null)
             throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
-        
+
         SubmissionIsPending = true;
 
         await Db.Insertable(new TeamJudgeIgnored
@@ -177,7 +228,7 @@ public partial class Judge : ComponentBase
         await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
 
         await UpdateNext();
-        
+
         SubmissionIsPending = false;
     }
 
@@ -185,7 +236,7 @@ public partial class Judge : ComponentBase
     {
         if (JudgeJudge.NextTeamId == null)
             throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
-        
+
         SubmissionIsPending = true;
 
         await Db.Insertable(new TeamJudgeIgnored
@@ -195,7 +246,7 @@ public partial class Judge : ComponentBase
         }).ExecuteCommandAsync();
 
         await UpdateNext();
-        
+
         SubmissionIsPending = false;
     }
 
@@ -248,7 +299,7 @@ public partial class Judge : ComponentBase
         }).ExecuteCommandAsync();
 
         await UpdateNext();
-        
+
         SubmissionIsPending = false;
     }
 
