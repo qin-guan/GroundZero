@@ -15,12 +15,116 @@
         <strong>Judges</strong>
         <a class="btn btn-primary" href=@($"/home/organizer/hackathons/{Id}/judges/create")>Add</a>
     </div>
-        
+
     <div class="mt-2">
         @if (Hackathon?.Judges.Count == 0)
         {
             <span>Nothing here yet, add a judge!</span>
         }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col">
+                            ID
+                        </th>
+                        <th scope="col">
+                            Name
+                        </th>
+                        <th scope="col">
+                            Alpha
+                        </th>
+                        <th scope="col">
+                            Beta
+                        </th>
+                        <th scope="col">
+                            Next Team
+                        </th>
+                        <th scope="col">
+                            Previous Team
+                        </th>
+                        <th scope="col">
+                            Actions
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var judge in Hackathon?.Judges ?? [])
+                    {
+                        <tr>
+                            <th scope="row">
+                                @judge.Id.ToString()[..6]
+                            </th>
+                            <td>
+                                @judge.Name
+                            </td>
+                            <td>
+                                @judge.Alpha
+                            </td>
+                            <td>
+                                @judge.Beta
+                            </td>
+                            <td>
+                                @judge.NextTeam?.Name
+                            </td>
+                            <td>
+                                @judge.PreviousTeam?.Name
+                            </td>
+                            <td>
+                                <HxNavLink Text="Link" Href=@($"/_/j/{judge.Secret}") target="_blank"></HxNavLink>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="mt-2">
+        Decisions
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">
+                        Time
+                    </th>
+                    <th scope="col">
+                        Judge
+                    </th>
+                    <th scope="col">
+                        Winner
+                    </th>
+                    <th scope="col">
+                        Loser
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var decision in Decisions)
+                {
+                    <tr>
+                        <th scope="row">
+                            @decision.CreatedAt.DateTime.ToString()
+                        </th>
+                        <th>
+                            @decision.Judge.Name
+                        </th>
+                        <td>
+                            @decision.Winner.Name
+                        </td>
+                        <td>
+                            @decision.Loser.Name
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     </div>
 </NavContainer>
 
@@ -31,17 +135,28 @@
 
     private Hackathon? Hackathon { get; set; }
 
+    private List<Decision> Decisions { get; set; } = [];
+
     protected override async Task OnInitializedAsync()
     {
         Hackathon = await Db.Queryable<Hackathon>()
-            .Includes(h => h.Judges)
+            .Includes(h => h.Judges, j => j.NextTeam)
+            .Includes(h => h.Judges, j => j.PreviousTeam)
             .SingleAsync(h => h.Id == Id);
-        
+
         if (Hackathon is null)
         {
             Navigation.NavigateTo("home");
             return;
         }
+
+        Decisions = await Db.Queryable<Decision>()
+            .Includes(d => d.Judge)
+            .Includes(d => d.Winner)
+            .Includes(d => d.Loser)
+            .Where(d => d.Judge.HackathonId == Hackathon.Id)
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync();
     }
 
 }

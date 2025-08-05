@@ -1,6 +1,7 @@
 <HxBreadcrumb>
-    <HxBreadcrumbItem Href="home" Text="Hackathons"/>
-    <HxBreadcrumbItem Text=@(HackathonName ?? "Loading...") Active="true"/>
+    <HxBreadcrumbItem Href="home/organizer" Text="Hackathons"/>
+    <HxBreadcrumbItem Text=@(HackathonName ?? "Loading...")/>
+    @AdditionalBreadcrumbItems
 </HxBreadcrumb>
 
 <HxNav Variant="NavVariant.Pills" CssClass="mb-3">
@@ -20,6 +21,9 @@
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+    
+    [Parameter]
+    public RenderFragment? AdditionalBreadcrumbItems { get; set; }
 
     [Parameter]
     public string? HackathonName { get; set; }

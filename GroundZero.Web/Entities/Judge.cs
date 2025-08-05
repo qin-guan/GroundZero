@@ -9,7 +9,9 @@ public class Judge
     [SugarColumn(IsPrimaryKey = true)]
     public Guid Id { get; set; }
 
-    public string Secret { get; set; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+    public string Name { get; set; }
+
+    public Guid Secret { get; set; } = Guid.NewGuid();
 
     #region CrowdBT
 
@@ -21,6 +23,8 @@ public class Judge
     public double Beta { get; set; } = CrowdBt.BetaPrior;
 
     #endregion
+
+    public bool Active { get; set; } = true;
 
     [SugarColumn(IsNullable = true)]
     public Guid? NextTeamId { get; set; }

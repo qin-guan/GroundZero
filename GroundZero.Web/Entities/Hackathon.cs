@@ -31,6 +31,10 @@ public class Hackathon
     public DateTimeOffset SubmissionsStartDate { get; set; }
 
     public DateTimeOffset SubmissionsEndDate { get; set; }
+    
+    public DateTimeOffset JudgingStartDate { get; set; }
+
+    public DateTimeOffset JudgingEndDate { get; set; }
 
     [Navigate(NavigateType.OneToMany, nameof(Participant.HackathonId))]
     public List<Participant> Participants { get; set; }

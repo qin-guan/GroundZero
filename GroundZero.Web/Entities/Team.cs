@@ -58,19 +58,8 @@ public class Team
 
     #endregion
 
-    [SugarColumn(IsNullable = true)]
-    public Guid? NextJudgeId { get; set; }
-
-    [Navigate(NavigateType.OneToOne, nameof(NextJudgeId))]
-    public Judge? NextJudge { get; set; }
-
-    [SugarColumn(IsNullable = true)]
-    public Guid? PreviousJudgeId { get; set; }
 
     public Guid HackathonId { get; set; }
-
-    [Navigate(NavigateType.OneToOne, nameof(PreviousJudgeId))]
-    public Judge? PreviousJudge { get; set; }
 
     [Navigate(NavigateType.OneToMany, nameof(Participant.TeamId))]
     public List<Participant> Members { get; set; } = null!;
