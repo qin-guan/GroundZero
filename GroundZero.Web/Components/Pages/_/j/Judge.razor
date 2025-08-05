@@ -81,11 +81,30 @@ else
     {
         await FetchData();
         await MaybeInitAnnotator();
-        await FetchData();
         IsPending = false;
     }
 
-    public async Task MaybeInitAnnotator()
+    private async Task FetchData()
+    {
+        var entity = await Db.Queryable<Entities.Judge>()
+            .Includes(j => j.NextTeam!, t => t.JudgesViewed)
+            .Includes(j => j.PreviousTeam)
+            .Includes(j => j.IgnoredTeams)
+            .Includes(j => j.ViewedTeams)
+            .LeftJoin<Hackathon>((j, h) => j.HackathonId == h.Id)
+            .Where((j) => j.Secret == Secret)
+            .Select((j, h) => new { Judge = j, Hackathon = h, j.NextTeam, j.PreviousTeam, j.IgnoredTeams, j.ViewedTeams })
+            .SingleAsync();
+
+        JudgeJudge = entity.Judge;
+        JudgeJudge.NextTeam = entity.NextTeam;
+        JudgeJudge.PreviousTeam = entity.PreviousTeam;
+        JudgeJudge.IgnoredTeams = entity.IgnoredTeams;
+        JudgeJudge.ViewedTeams = entity.ViewedTeams;
+        Hackathon = entity.Hackathon;
+    }
+
+    private async Task MaybeInitAnnotator()
     {
         if (JudgeJudge.NextTeamId is not null)
         {
@@ -101,60 +120,49 @@ else
         }
     }
 
-    public async Task<List<Team>> PreferredItems()
+    private async Task<List<Team>> GetAvailableTeams()
     {
-        List<Team> availableItems = [];
+        var ignoredTeamIds = JudgeJudge.IgnoredTeams.Select(t => t.Id).ToList();
+       
+        var query = Db.Queryable<Team>()
+            .Includes(t => t.JudgesViewed)
+            .Where(t => t.Active && t.HackathonId == JudgeJudge.HackathonId);
 
-        var ignoredTeams = await Db.Queryable<TeamJudgeIgnored>()
-            .Where(t => t.JudgeId == JudgeJudge.Id)
-            .Select(t => t.TeamId)
-            .ToListAsync();
-
-        if (ignoredTeams.Count > 0)
+        if (ignoredTeamIds.Count > 0)
         {
-            availableItems.AddRange(
-                await Db.Queryable<Team>()
-                    .Includes(t => t.JudgesViewed)
-                    .Where(t => t.Active &&
-                                t.HackathonId == JudgeJudge.HackathonId &&
-                                !ignoredTeams.Contains(t.Id)
-                    )
-                    .ToListAsync()
-            );
-        }
-        else
-        {
-            availableItems.AddRange(
-                await Db.Queryable<Team>()
-                    .Includes(t => t.JudgesViewed)
-                    .Where(t => t.Active &&
-                                t.HackathonId == JudgeJudge.HackathonId
-                    )
-                    .ToListAsync()
-            );
+            query = query.Where(t => !ignoredTeamIds.Contains(t.Id));
         }
 
-        List<Team> teams = [];
-        var prioritizedTeams = availableItems.Where(t => t.Prioritized).ToList();
-
-        teams.AddRange(prioritizedTeams.Count > 0 ? prioritizedTeams : availableItems);
-
-        var judges = await Db.Queryable<Entities.Judge>()
-            .Includes(j => j.ViewedTeams)
-            .Where(j => j.HackathonId == JudgeJudge.HackathonId && j.Active && j.NextTeamId != null && j.UpdatedAt != null)
-            .ToListAsync();
-
-        var busy = judges.Where(j => (DateTimeOffset.Now - j.UpdatedAt) > TimeSpan.FromMinutes(1)).Select(j => j.NextTeamId).ToList();
-        var nonBusy = teams.Where(t => !busy.Contains(t.Id)).ToList();
-
-        var preferred = nonBusy.Count > 0 ? nonBusy : teams;
-
-        var lessSeen = preferred.Where(t => t.JudgesViewed.Count < 3).ToList();
-
-        return lessSeen.Count > 0 ? lessSeen : preferred;
+        return await query.ToListAsync();
     }
 
-    public async Task<Team?> ChooseNext()
+    private async Task<List<Team>> PreferredItems()
+    {
+        var availableItems = await GetAvailableTeams();
+
+        // First filter for prioritized teams if available
+        var prioritizedTeams = availableItems.Where(t => t.Prioritized).ToList();
+        var teams = prioritizedTeams.Count > 0 ? prioritizedTeams : availableItems;
+
+        // Filter out busy teams (those being viewed by other judges recently)
+        var busyTeamIds = await Db.Queryable<Entities.Judge>()
+            .Where(j => j.HackathonId == JudgeJudge.HackathonId &&
+                        j.Active &&
+                        j.NextTeamId != null &&
+                        j.UpdatedAt != null &&
+                        (DateTimeOffset.Now - j.UpdatedAt) <= TimeSpan.FromMinutes(1))
+            .Select(j => j.NextTeamId)
+            .ToListAsync();
+
+        var nonBusyTeams = teams.Where(t => !busyTeamIds.Contains(t.Id)).ToList();
+        var preferred = nonBusyTeams.Count > 0 ? nonBusyTeams : teams;
+
+        // Prefer teams seen by fewer judges
+        var lessSeenTeams = preferred.Where(t => t.JudgesViewed.Count < 3).ToList();
+        return lessSeenTeams.Count > 0 ? lessSeenTeams : preferred;
+    }
+
+    private async Task<Team?> ChooseNext()
     {
         var teams = (await PreferredItems()).Shuffle().ToList();
         if (teams.Count == 0) return null;
@@ -182,65 +190,78 @@ else
         );
     }
 
-    public async Task BeginContinue()
+    private async Task BeginContinue()
     {
+        if (JudgeJudge.NextTeamId == null) throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
+
+        // Record that this team was viewed and ignored
         await Db.Insertable(new TeamJudgeIgnored
         {
-            TeamId = JudgeJudge?.NextTeamId ?? throw new ArgumentNullException(),
+            TeamId = JudgeJudge.NextTeamId.Value,
             JudgeId = JudgeJudge.Id
         }).ExecuteCommandAsync();
 
         await Db.Insertable(new TeamJudgeViewed
         {
-            TeamId = JudgeJudge?.NextTeamId ?? throw new ArgumentNullException(),
+            TeamId = JudgeJudge.NextTeamId.Value,
             JudgeId = JudgeJudge.Id
         }).ExecuteCommandAsync();
 
+        // Set previous team to current team
         JudgeJudge.PreviousTeamId = JudgeJudge.NextTeamId;
-
-        await Db.Updateable(JudgeJudge).ExecuteReturnEntityAsync();
+        await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
 
         await UpdateNext();
     }
 
-    public async Task BeginSkip()
+    private async Task BeginSkip()
     {
+        if (JudgeJudge.NextTeamId == null) throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
+
         await Db.Insertable(new TeamJudgeIgnored
         {
-            TeamId = JudgeJudge?.NextTeamId ?? throw new ArgumentNullException(),
+            TeamId = JudgeJudge.NextTeamId.Value,
             JudgeId = JudgeJudge.Id
         }).ExecuteCommandAsync();
 
         JudgeJudge.NextTeamId = null;
-
         await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
+
         Navigation.NavigateTo($"/_/j/{Secret}/judge", true);
     }
 
-    public async Task VoteSkip()
+    private async Task VoteSkip()
     {
-        var skippedId = JudgeJudge.NextTeamId ?? throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
-        await Db.Insertable(new TeamJudgeIgnored { TeamId = skippedId, JudgeId = JudgeJudge.Id }).ExecuteCommandAsync();
+        if (JudgeJudge.NextTeamId == null) throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
+
+        await Db.Insertable(new TeamJudgeIgnored
+        {
+            TeamId = JudgeJudge.NextTeamId.Value,
+            JudgeId = JudgeJudge.Id
+        }).ExecuteCommandAsync();
+
         await UpdateNext();
     }
 
-    public async Task Vote(bool previousWon)
+    private async Task Vote(bool previousWon)
     {
         if (JudgeJudge.PreviousTeam?.Active == true && JudgeJudge.NextTeam?.Active == true)
         {
             var winner = previousWon ? JudgeJudge.PreviousTeam! : JudgeJudge.NextTeam!;
             var loser = previousWon ? JudgeJudge.NextTeam! : JudgeJudge.PreviousTeam!;
 
-            var e = CrowdBt.Update(JudgeJudge.Alpha, JudgeJudge.Beta, winner.Mu, winner.SigmaSq, loser.Mu, loser.SigmaSq);
+            var (newAlpha, newBeta, winnerMu, winnerSigmaSq, loserMu, loserSigmaSq) =
+                CrowdBt.Update(JudgeJudge.Alpha, JudgeJudge.Beta, winner.Mu, winner.SigmaSq, loser.Mu, loser.SigmaSq);
 
-            JudgeJudge.Alpha = e.Item1;
-            JudgeJudge.Beta = e.Item2;
-            winner.Mu = e.Item3;
-            winner.SigmaSq = e.Item4;
-            loser.Mu = e.Item5;
-            loser.SigmaSq = e.Item6;
+            JudgeJudge.Alpha = newAlpha;
+            JudgeJudge.Beta = newBeta;
+            winner.Mu = winnerMu;
+            winner.SigmaSq = winnerSigmaSq;
+            loser.Mu = loserMu;
+            loser.SigmaSq = loserSigmaSq;
 
-            await Db.Updateable(new List<Team> { winner, loser }).ExecuteCommandAsync();
+            await Db.Updateable(winner).ExecuteCommandAsync();
+            await Db.Updateable(loser).ExecuteCommandAsync();
             await Db.Insertable(new Decision
             {
                 JudgeId = JudgeJudge.Id,
@@ -249,58 +270,42 @@ else
             }).ExecuteCommandAsync();
         }
 
+        if (JudgeJudge.NextTeamId == null) throw new ArgumentNullException(nameof(JudgeJudge.NextTeamId));
+
+        // Record that this team was viewed
         await Db.Insertable(new TeamJudgeViewed
         {
-            TeamId = JudgeJudge?.NextTeamId ?? throw new ArgumentNullException(),
+            TeamId = JudgeJudge.NextTeamId.Value,
             JudgeId = JudgeJudge.Id
         }).ExecuteCommandAsync();
 
+        // Set previous team to current team and mark it as ignored
         JudgeJudge.PreviousTeamId = JudgeJudge.NextTeamId;
-
         await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
 
         await Db.Insertable(new TeamJudgeIgnored
         {
-            TeamId = JudgeJudge?.PreviousTeamId ?? throw new ArgumentNullException(),
+            TeamId = JudgeJudge.PreviousTeamId.Value,
             JudgeId = JudgeJudge.Id
         }).ExecuteCommandAsync();
 
         await UpdateNext();
     }
 
-    public async Task FetchData()
-    {
-        var entity = await Db.Queryable<Entities.Judge>()
-            .Includes(j => j.NextTeam!, t => t.JudgesViewed)
-            .Includes(j => j.PreviousTeam)
-            .Includes(j => j.IgnoredTeams)
-            .Includes(j => j.ViewedTeams)
-            .LeftJoin<Hackathon>((j, h) => j.HackathonId == h.Id)
-            .Where((j) => j.Secret == Secret)
-            .Select((j, h) => new { Judge = j, Hackathon = h, j.NextTeam, j.PreviousTeam, j.IgnoredTeams, j.ViewedTeams })
-            .SingleAsync();
-
-        JudgeJudge = entity.Judge;
-        JudgeJudge.NextTeam = entity.NextTeam;
-        JudgeJudge.PreviousTeam = entity.PreviousTeam;
-        JudgeJudge.IgnoredTeams = entity.IgnoredTeams;
-        JudgeJudge.ViewedTeams = entity.ViewedTeams;
-        Hackathon = entity.Hackathon;
-    }
-
-    public async Task UpdateNext()
+    private async Task UpdateNext()
     {
         await FetchData();
 
         var next = await ChooseNext();
         JudgeJudge.NextTeamId = next?.Id;
         JudgeJudge.UpdatedAt = DateTimeOffset.Now;
-        await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
 
         if (next is not null)
         {
             JudgeJudge.NextTeam = next;
         }
+
+        await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
     }
 
 }

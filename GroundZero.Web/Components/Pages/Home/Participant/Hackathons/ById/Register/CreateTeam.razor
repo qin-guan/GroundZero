@@ -84,7 +84,7 @@
     {
         var existing = await Db
             .Queryable<Participant>()
-            .AnyAsync(p => p.UserId == HttpContextAccessor.HttpContext.User.GetUserId());
+            .AnyAsync(p => p.UserId == HttpContextAccessor.HttpContext.User.GetUserId() && p.HackathonId == Hackathon.Id);
         
         if (existing)
         {
