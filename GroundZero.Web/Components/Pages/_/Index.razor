@@ -1,0 +1,68 @@
+@page "/_/{shortcode}"
+
+@using GroundZero.Web.Client.Layout
+@using SqlSugar
+
+@layout LandingLayout
+
+@inject ISqlSugarClient Db
+
+@if (Hackathon is null)
+{
+    <h1>Hackathon not found :(</h1>
+    <a href="/home/organizer/hackathons/new">Create your own</a>
+    <span>hackathon instead?</span>
+
+    return;
+}
+
+<h2>@Hackathon.Name</h2>
+
+@if (!string.IsNullOrWhiteSpace(Hackathon.Description))
+{
+    <p>@Hackathon.Description</p>
+}
+
+<div class="d-flex items-center gap-2">
+    <a class="btn btn-primary" href=@($"/home/participant/hackathons/{Hackathon.Id}/register")>Register using GitHub</a>
+
+    @if (!string.IsNullOrWhiteSpace(Hackathon.HomepageUri))
+    {
+        <a class="btn btn-outline" href="@Hackathon.HomepageUri">View website</a>
+    }
+</div>
+
+<hr/>
+
+<h3>
+    Date
+</h3>
+<p>
+    @Hackathon.EventStartDate.ToString("d") - @Hackathon.EventEndDate.ToString("d")
+    (@((Hackathon.EventEndDate - Hackathon.EventStartDate).TotalDays.ToString("N0")) days)
+</p>
+
+@if (!string.IsNullOrWhiteSpace(Hackathon.Venue))
+{
+    <h3>
+        Location
+    </h3>
+    <p>
+        @Hackathon.Venue
+    </p>
+}
+
+@code {
+
+    [Parameter]
+    public string? ShortCode { get; set; }
+
+    private Entities.Hackathon? Hackathon { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon = await Db.Queryable<Entities.Hackathon>()
+            .SingleAsync(h => h.ShortCode == ShortCode && h.IsPublished == true);
+    }
+
+}

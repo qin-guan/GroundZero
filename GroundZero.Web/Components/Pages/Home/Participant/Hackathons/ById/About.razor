@@ -1,0 +1,78 @@
+@page "/home/participant/hackathons/{id:guid}"
+
+@using GroundZero.Web.Authentication
+@using GroundZero.Web.Entities
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@attribute [Authorize]
+
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ISqlSugarClient Db
+
+@if (Hackathon is null)
+{
+    return;
+}
+
+@if (RedirectFromCreateTeam is true)
+{
+    <div style="position: absolute; right: 0;" class="me-3">
+        <HxToast Color="ThemeColor.Success" ContentText="You are already part of a team!" />
+    </div>
+}
+
+<h2>@Hackathon.Name</h2>
+
+@if (!string.IsNullOrWhiteSpace(Hackathon.Description))
+{
+    <p>@Hackathon.Description</p>
+}
+
+<hr/>
+
+<h3>
+    Date
+</h3>
+<p>
+    @Hackathon.EventStartDate.ToString("d") - @Hackathon.EventEndDate.ToString("d")
+    (@((Hackathon.EventEndDate - Hackathon.EventStartDate).TotalDays.ToString("N0")) days)
+</p>
+
+@if (!string.IsNullOrWhiteSpace(Hackathon.Venue))
+{
+    <h3>
+        Location
+    </h3>
+    <p>
+        @Hackathon.Venue
+    </p>
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+    
+    [SupplyParameterFromQuery]
+    public bool? RedirectFromCreateTeam { get; set; }
+
+    private Entities.Hackathon? Hackathon { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon = await Db.Queryable<Entities.Participant>()
+            .LeftJoin<Hackathon>((p, h) => p.HackathonId == h.Id)
+            .Where((p, h) => p.UserId == HttpContextAccessor.HttpContext.User.GetUserId() && p.HackathonId == Id)
+            .Select((p, h) => h)
+            .SingleAsync();
+        
+        if (Hackathon is null)
+        {
+            Navigation.NavigateTo("home/participant");
+            return;
+        }
+    }
+
+}
