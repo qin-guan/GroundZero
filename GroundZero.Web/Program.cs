@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Claims;
 using AspNet.Security.OAuth.GitHub;
 using FastEndpoints;
@@ -5,6 +6,7 @@ using FastEndpoints.Swagger;
 using GroundZero.Web.Components;
 using GroundZero.Web.Context;
 using GroundZero.Web.Entities;
+using GroundZero.Web.Services;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Authentication;
@@ -45,6 +47,30 @@ builder.Services.AddSingleton<ISqlSugarClient>(sp =>
             {
                 var logger = sp.GetService<ILogger<ISqlSugarClient>>();
                 logger?.LogInformation("SQL: {Sql}", sql);
+            };
+
+            db.Aop.DataChangesExecuted = (oldValue, entityInfo) =>
+            {
+                switch (entityInfo.EntityValue)
+                {
+                    case Decision d:
+                    {
+                        VotingService.SomethingHappenedInHackathonChannel.Writer.TryWrite(Guid.NewGuid());
+                        break;
+                    }
+                    case Judge j:
+                    {
+                        VotingService.SomethingHappenedInHackathonChannel.Writer.TryWrite(j.HackathonId);
+                        break;
+                    }
+                    case Team t:
+                    {
+                        VotingService.SomethingHappenedInHackathonChannel.Writer.TryWrite(t.HackathonId);
+                        break;
+                    }
+                    default:
+                        return;
+                }
             };
         });
 

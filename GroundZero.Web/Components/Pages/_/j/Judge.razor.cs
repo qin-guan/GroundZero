@@ -8,7 +8,7 @@ using SqlSugar;
 
 namespace GroundZero.Web.Components.Pages._.j;
 
-public partial class Judge : ComponentBase
+public partial class Judge : ComponentBase, IDisposable
 {
     [Inject]
     public required ISqlSugarClient Db { get; init; }
@@ -22,20 +22,19 @@ public partial class Judge : ComponentBase
     [Parameter]
     public required Guid Secret { get; init; }
 
-    private bool _isPending = true;
-
     private bool SubmissionIsPending { get; set; }
 
     private Entities.Judge JudgeJudge { get; set; } = null!;
 
     private Hackathon? Hackathon { get; set; }
 
-    private PersistingComponentStateSubscription persistingSubscription;
-    private bool hasPrerenderedData;
+    private bool _isPending = true;
+    private bool _hasPrerenderedData;
+    private PersistingComponentStateSubscription _persistingSubscription;
 
     protected override async Task OnInitializedAsync()
     {
-        if (ApplicationState.TryTakeFromJson<bool>(nameof(hasPrerenderedData), out var d) && d)
+        if (ApplicationState.TryTakeFromJson<bool>(nameof(_hasPrerenderedData), out var d) && d)
         {
             ApplicationState.TryTakeFromJson<Entities.Hackathon>(nameof(Hackathon), out var hackathon);
             ApplicationState.TryTakeFromJson<Entities.Judge>(nameof(JudgeJudge), out var judgeJudge);
@@ -45,21 +44,20 @@ public partial class Judge : ComponentBase
         else
         {
             await FetchData();
-            hasPrerenderedData = true;
+            _hasPrerenderedData = true;
         }
 
         await MaybeInitAnnotator();
 
         _isPending = false;
-
-        persistingSubscription = ApplicationState.RegisterOnPersisting(PersistStateAsync);
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistStateAsync);
     }
 
     private Task PersistStateAsync()
     {
         ApplicationState.PersistAsJson(nameof(JudgeJudge), JudgeJudge);
         ApplicationState.PersistAsJson(nameof(Hackathon), Hackathon);
-        ApplicationState.PersistAsJson(nameof(hasPrerenderedData), hasPrerenderedData);
+        ApplicationState.PersistAsJson(nameof(_hasPrerenderedData), _hasPrerenderedData);
         return Task.CompletedTask;
     }
 
@@ -297,5 +295,10 @@ public partial class Judge : ComponentBase
         }
 
         await Db.Updateable(JudgeJudge).ExecuteCommandAsync();
+    }
+
+    public void Dispose()
+    {
+        _persistingSubscription.Dispose();
     }
 }
