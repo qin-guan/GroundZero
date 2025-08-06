@@ -140,7 +140,7 @@
 
     private List<Decision> Decisions { get; set; } = [];
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
         Hackathon = await Db.Queryable<Hackathon>()
             .Includes(h => h.Judges, j => j.NextTeam)
