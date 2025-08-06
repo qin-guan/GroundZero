@@ -1,8 +1,11 @@
 @page "/home/organizer/hackathons/{id:guid}/judges"
 
 @using GroundZero.Web.Entities
+@using GroundZero.Web.Services
 @using Microsoft.AspNetCore.Authorization
 @using SqlSugar
+
+@rendermode InteractiveServer
 
 @attribute [Authorize]
 @attribute [StreamRendering]
@@ -12,7 +15,6 @@
 
 <NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
     <div class="d-flex justify-content-between align-items-center">
-        <strong>Judges</strong>
         <a class="btn btn-primary" href=@($"/home/organizer/hackathons/{Id}/judges/create")>Add</a>
     </div>
 
@@ -24,7 +26,8 @@
         else
         {
             <div class="table-responsive">
-                <table class="table">
+                <table class="table caption-top">
+                    <caption>Judges</caption>
                     <thead>
                     <tr>
                         <th scope="col">
@@ -84,10 +87,9 @@
     </div>
 
     <div class="mt-2">
-        Decisions
-
         <div class="table-responsive">
-            <table class="table">
+            <table class="table caption-top">
+                <caption>Decisions</caption>
                 <thead>
                 <tr>
                     <th scope="col">
@@ -150,6 +152,24 @@
             return;
         }
 
+        await FetchDecisions();
+
+        var _ = Task.Run(async () =>
+        {
+            while (await VotingService.SomethingHappenedInHackathonChannel.Reader.WaitToReadAsync())
+            {
+                while (VotingService.SomethingHappenedInHackathonChannel.Reader.TryRead(out var v))
+                {
+                    Console.WriteLine("nice");
+                    await FetchDecisions();
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+        });
+    }
+
+    private async Task FetchDecisions()
+    {
         Decisions = await Db.Queryable<Decision>()
             .Includes(d => d.Judge)
             .Includes(d => d.Winner)
