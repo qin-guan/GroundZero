@@ -12,7 +12,6 @@
 
 @inject NavigationManager Navigation
 @inject ISqlSugarClient Db
-@inject PersistentComponentState ApplicationState
 
 <NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
     <div class="d-flex justify-content-between align-items-center">
@@ -108,7 +107,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var decision in Decisions)
+                @foreach (var decision in Decisions ?? [])
                 {
                     <tr>
                         <th scope="row">
@@ -136,13 +135,15 @@
     [Parameter]
     public Guid Id { get; set; }
 
+    [PersistentState]
     private Hackathon? Hackathon { get; set; }
 
-    private List<Decision> Decisions { get; set; } = [];
+    [PersistentState]
+    private List<Decision>? Decisions { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Hackathon = await Db.Queryable<Hackathon>()
+        Hackathon ??= await Db.Queryable<Hackathon>()
             .Includes(h => h.Judges, j => j.NextTeam)
             .Includes(h => h.Judges, j => j.PreviousTeam)
             .SingleAsync(h => h.Id == Id);
@@ -153,21 +154,7 @@
             return;
         }
 
-        if (ApplicationState.TryTakeFromJson<bool>("prerender", out var p) && p)
-        {
-            ApplicationState.TryTakeFromJson<List<Decision>>(nameof(Decisions), out var decisions);
-            Decisions = decisions!;
-        }
-        else
-        {
-            await FetchDecisions();
-            ApplicationState.RegisterOnPersisting(() =>
-            {
-                ApplicationState.PersistAsJson(nameof(Decisions), Decisions);
-                ApplicationState.PersistAsJson("prerender", true);
-                return Task.CompletedTask;
-            });
-        }
+        await FetchDecisions();
 
         var _ = Task.Run(async () =>
         {
@@ -175,7 +162,6 @@
             {
                 while (VotingService.SomethingHappenedInHackathonChannel.Reader.TryRead(out var v))
                 {
-                    Console.WriteLine("nice");
                     await FetchDecisions();
                     await InvokeAsync(StateHasChanged);
                 }
@@ -185,7 +171,7 @@
 
     private async Task FetchDecisions()
     {
-        Decisions = await Db.Queryable<Decision>()
+        Decisions ??= await Db.Queryable<Decision>()
             .Includes(d => d.Judge)
             .Includes(d => d.Winner)
             .Includes(d => d.Loser)
