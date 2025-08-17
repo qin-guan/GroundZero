@@ -136,10 +136,10 @@
     public Guid Id { get; set; }
 
     [PersistentState]
-    private Hackathon? Hackathon { get; set; }
+    public Hackathon? Hackathon { get; set; }
 
     [PersistentState]
-    private List<Decision>? Decisions { get; set; }
+    public List<Decision>? Decisions { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
