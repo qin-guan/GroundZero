@@ -1,0 +1,36 @@
+<div class="bg-body-tertiary text-body-tertiary px-3 py-3">
+    <HxBreadcrumb>
+        <HxBreadcrumbItem Href="home/organizer" Text="Hackathons"/>
+        <HxBreadcrumbItem Text=@(HackathonName ?? "Loading...")/>
+        @AdditionalBreadcrumbItems
+    </HxBreadcrumb>
+
+    <HxNav Variant="NavVariant.Pills">
+        <HxNavLink Href=@($"/home/organizer/hackathons/{HackathonId}/") Match="NavLinkMatch.All" Text="General"/>
+        <HxNavLink Href=@($"/home/organizer/hackathons/{HackathonId}/judges") Text="Judges"/>
+        <HxNavLink Href=@($"/home/organizer/hackathons/{HackathonId}/teams") Text="Teams"/>
+        <HxNavLink Href=@($"/home/organizer/hackathons/{HackathonId}/participants") Text="Participants"/>
+        <HxNavLink Href=@($"/home/organizer/hackathons/{HackathonId}/sharing") Text="Sharing"/>
+        <HxNavLink Href=@($"/home/organizer/hackathons/{HackathonId}/advanced") Text="Advanced" CssClass="link-danger"/>
+    </HxNav>
+</div>
+
+<div class="p-3">
+    @ChildContent
+</div>
+
+@code {
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+    
+    [Parameter]
+    public RenderFragment? AdditionalBreadcrumbItems { get; set; }
+
+    [Parameter]
+    public string? HackathonName { get; set; }
+
+    [Parameter]
+    public Guid? HackathonId { get; set; }
+
+}

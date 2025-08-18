@@ -1,0 +1,33 @@
+@page "/home/organizer/hackathons/{id:guid}/participants"
+
+@using GroundZero.Web.Entities
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@attribute [Authorize]
+@attribute [StreamRendering]
+
+@inject NavigationManager Navigation
+@inject ISqlSugarClient Db
+
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+</NavContainer>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Hackathon? Hackathon { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon = await Db.Queryable<Entities.Hackathon>().SingleAsync(h => h.Id == Id);
+        if (Hackathon is null)
+        {
+            Navigation.NavigateTo("home");
+            return;
+        }
+    }
+
+}

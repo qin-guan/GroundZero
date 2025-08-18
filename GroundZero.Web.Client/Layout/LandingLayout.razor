@@ -1,0 +1,30 @@
+@inherits LayoutComponentBase
+
+<div class="min-vh-100">
+    <HxNavbar CssClass="bg-body-tertiary">
+        <HxNavbarBrand>GroundZero</HxNavbarBrand>
+        <HxNavbarToggler/>
+        <HxNavbarCollapse>
+            <HxNav CssClass="mb-2 mb-lg-0">
+                <AuthorizeView>
+                    <Authorized>
+                        <HxNavLink Href="/home/organizer">Dashboard</HxNavLink>
+                    </Authorized>
+                    <NotAuthorized>
+                        <HxNavLink Href="/auth/github/login">Login</HxNavLink>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </HxNav>
+        </HxNavbarCollapse>
+    </HxNavbar>
+
+    <div class="main p-4 flex-grow-1">
+        @Body
+    </div>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

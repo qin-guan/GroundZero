@@ -1,0 +1,20 @@
+﻿@using GroundZero.Web.Client.Layout
+
+@inherits LayoutComponentBase
+
+<HxMessenger Position="ToastContainerPosition.BottomCenter"/>
+<HxMessageBoxHost/>
+
+<div class="d-md-flex min-vh-100">
+    <NavMenu @rendermode="InteractiveAuto"/>
+
+    <div class="main flex-grow-1">
+        @Body
+    </div>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

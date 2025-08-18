@@ -1,0 +1,100 @@
+@page "/home/organizer/hackathons/{id:guid}/judges"
+
+@using GroundZero.Web.Entities
+@using GroundZero.Web.Services
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+@attribute [StreamRendering]
+
+@inject NavigationManager Navigation
+@inject ISqlSugarClient Db
+
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+    <div class="mt-2">
+        <HxTabPanel InitialActiveTabId="tab2">
+            <HxTab Title="Judges">
+                <Content>
+                    <HxGrid TItem="Judge" DataProvider="DataProvider" Responsive="true">
+                        <Columns>
+                            <HxGridColumn HeaderText="ID" ItemTextSelector="j => j.Id.ToString()"></HxGridColumn>
+                            <HxGridColumn HeaderText="Name" ItemTextSelector="j => j.Name.ToString()"></HxGridColumn>
+                            <HxGridColumn HeaderText="Alpha" ItemTextSelector="j => j.Alpha.ToString()"></HxGridColumn>
+                            <HxGridColumn HeaderText="Beta" ItemTextSelector="j => j.Beta.ToString()"></HxGridColumn>
+                            <HxGridColumn HeaderText="Next Team"
+                                          ItemTextSelector="j => j.NextTeamId.ToString()"></HxGridColumn>
+                            <HxGridColumn HeaderText="Previous Team"
+                                          ItemTextSelector="j => j.PreviousTeamId.ToString()"></HxGridColumn>
+                            <HxGridColumn HeaderText="Actions">
+                                <ItemTemplate>
+                                    <span>Nice</span>
+                                </ItemTemplate>
+                            </HxGridColumn>
+                        </Columns>
+                    </HxGrid>
+                </Content>
+            </HxTab>
+            <HxTab Id="tab2" Title="Decisions">
+                <Content>This is the second tab. This tab is initially active.</Content>
+            </HxTab>
+        </HxTabPanel>
+    </div>
+</NavContainer>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [PersistentState]
+    public Hackathon? Hackathon { get; set; }
+
+    [PersistentState]
+    public List<Decision>? Decisions { get; set; }
+
+    public async Task<GridDataProviderResult<Judge>> DataProvider(GridDataProviderRequest<Judge> _)
+    {
+        Hackathon ??= await Db.Queryable<Hackathon>()
+            .Includes(h => h.Judges, j => j.NextTeam)
+            .Includes(h => h.Judges, j => j.PreviousTeam)
+            .SingleAsync(h => h.Id == Id);
+
+        return new GridDataProviderResult<Judge>
+        {
+            Data = Hackathon.Judges,
+            TotalCount = Hackathon.Judges.Count
+        };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchDecisions();
+
+        var _ = Task.Run(async () =>
+        {
+            while (await VotingService.SomethingHappenedInHackathonChannel.Reader.WaitToReadAsync())
+            {
+                while (VotingService.SomethingHappenedInHackathonChannel.Reader.TryRead(out var v))
+                {
+                    await FetchDecisions();
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+        });
+    }
+
+    private async Task FetchDecisions()
+    {
+        Decisions ??= await Db.Queryable<Decision>()
+            .Includes(d => d.Judge)
+            .Includes(d => d.Winner)
+            .Includes(d => d.Loser)
+            .Where(d => d.Judge.HackathonId == Hackathon.Id)
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync();
+    }
+
+}

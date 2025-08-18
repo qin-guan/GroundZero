@@ -1,0 +1,121 @@
+@page "/home/participant/hackathons/{id:guid}/register/create-team"
+
+@using GroundZero.Web.Authentication
+@using GroundZero.Web.Entities
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@attribute [Authorize]
+
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ISqlSugarClient Db
+
+@if (Hackathon is null)
+{
+    return;
+}
+
+<h2>@Hackathon.Name</h2>
+
+@if (!string.IsNullOrWhiteSpace(Hackathon.Description))
+{
+    <p>@Hackathon.Description</p>
+}
+
+<hr/>
+
+<h3>
+    Date
+</h3>
+<p>
+    @Hackathon.EventStartDate.ToString("d") - @Hackathon.EventEndDate.ToString("d")
+    (@((Hackathon.EventEndDate - Hackathon.EventStartDate).TotalDays.ToString("N0")) days)
+</p>
+
+@if (!string.IsNullOrWhiteSpace(Hackathon.Venue))
+{
+    <h3>
+        Location
+    </h3>
+    <p>
+        @Hackathon.Venue
+    </p>
+}
+
+@if (Model is not null)
+{
+    <EditForm Model="Model" OnValidSubmit="Submit" FormName=@(nameof(RegisterModel))>
+        <HxInputText Label="Name" @bind-Value="Model!.Name"></HxInputText>
+        <HxInputTextArea Label="Description" @bind-Value="Model!.Description"></HxInputTextArea>
+        <HxSubmit Text="Create team"></HxSubmit>
+    </EditForm>
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Entities.Hackathon? Hackathon { get; set; }
+
+    [SupplyParameterFromForm]
+    public RegisterModel? Model { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon = await Db.Queryable<Entities.Hackathon>().Includes(h => h.Organizers).SingleAsync(h => h.Id == Id);
+        if (Hackathon is null)
+        {
+            Navigation.NavigateTo("home");
+            return;
+        }
+
+        Model ??= new RegisterModel();
+
+        // if (Hackathon.Organizers.Any(o => o.UserId == HttpContextAccessor.HttpContext?.User.GetUserId()))
+        // {
+        //     Navigation.NavigateTo($"home/hackathons/{Id}");
+        //     return;
+        // }
+    }
+
+    public async Task Submit()
+    {
+        var existing = await Db
+            .Queryable<Participant>()
+            .AnyAsync(p => p.UserId == HttpContextAccessor.HttpContext.User.GetUserId() && p.HackathonId == Hackathon.Id);
+        
+        if (existing)
+        {
+            Navigation.NavigateTo($"home/participant/hackathons/{Id}?redirectFromCreateTeam=true");
+            return;
+        }
+
+        await Db.InsertNav(new Team
+            {
+                Name = Model.Name,
+                Description = Model.Description,
+                Active = true,
+                HackathonId = Hackathon.Id,
+                Members =
+                [
+                    new Participant
+                    {
+                        UserId = HttpContextAccessor.HttpContext.User.GetUserId(),
+                        HackathonId = Hackathon.Id,
+                    }
+                ]
+            })
+            .Include(t => t.Members)
+            .ExecuteCommandAsync();
+    }
+
+    public class RegisterModel
+    {
+        public string? Name { get; set; }
+
+        public string? Description { get; set; }
+    }
+
+}

@@ -1,0 +1,157 @@
+@page "/home/organizer/hackathons/{id:guid}/sharing"
+
+@using GroundZero.Web.Entities
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@attribute [Authorize]
+@attribute [StreamRendering]
+
+@inject NavigationManager Navigation
+@inject ISqlSugarClient Db
+
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+    <div class="gap-3 d-flex flex-column">
+        <form method="post"
+              @formname="EditHackathonSharingIsPublished"
+              @onsubmit="SubmitIsPublished">
+            <AntiforgeryToken/>
+
+            @if (Hackathon?.IsPublished is true)
+            {
+                <HxAlert Color="ThemeColor.Success" CssClass="mb-0">
+                    <h4>
+                        Published
+                    </h4>
+                    <span>Great job! Your hackathon is now viewable using the short code!</span>
+                    <hr/>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-secondary" target="_blank" href="@($"/_/{Hackathon?.ShortCode}")">Open
+                            link</a>
+                        <HxSubmit Color="ThemeColor.Danger" Outline="true" Text="Unpublish"></HxSubmit>
+                    </div>
+                </HxAlert>
+            }
+            
+            @if (Hackathon?.IsPublished is false)
+            {
+                <HxAlert Color="ThemeColor.Danger" CssClass="mb-0">
+                    <h4>
+                        Unpublished
+                    </h4>
+                    <span>Not ready yet? This hackathon is only viewable to organizers!</span>
+                    <hr/>
+                    <div class="d-flex gap-2">
+                        <HxSubmit Color="ThemeColor.Success" Text="Publish"></HxSubmit>
+                    </div>
+                </HxAlert>
+            }
+        </form>
+
+        @if (ParticipantForm is not null)
+        {
+            <EditForm Model="ParticipantForm" FormName="EditHackathonSharingParticipantForm"
+                      OnValidSubmit="SubmitParticipantForm">
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <HxInputText Label="Short code" Placeholder="hackomania-2026"
+                                 Hint="Participants will use this short code to join your hackathon"
+                                 @bind-Value="ParticipantForm.ShortCode"/>
+                    <HxSubmit Color="ThemeColor.Primary">Save</HxSubmit>
+                </div>
+            </EditForm>
+        }
+        
+        <HxCard>
+            <HeaderTemplate>
+                Organizers
+            </HeaderTemplate>
+            <BodyTemplate>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col">GitHub</th>
+                        <th scope="col">Permission</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var user in Organizers ?? [])
+                    {
+                        <tr>
+                            <td>
+                                <a href=@($"https://github.com/{user.GitHubUserName}") target="_blank">
+                                    @user.GitHubUserName
+                                </a>
+                            </td>
+
+                            <td>
+                                @user.Type.ToString()
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </BodyTemplate>
+        </HxCard>
+    </div>
+</NavContainer>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private List<OrganizerModel>? Organizers { get; set; }
+
+    [SupplyParameterFromForm]
+    private ParticipantFormModel? ParticipantForm { get; set; }
+
+    private Hackathon? Hackathon { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon = await Db.Queryable<Hackathon>().SingleAsync(h => h.Id == Id);
+        if (Hackathon is null)
+        {
+            Navigation.NavigateTo("home");
+            return;
+        }
+
+        ParticipantForm ??= new ParticipantFormModel
+        {
+            ShortCode = Hackathon.ShortCode
+        };
+
+        Organizers = await Db.Queryable<Organizer>()
+            .LeftJoin<User>((o, u) => o.UserId == u.Id)
+            .LeftJoin<GitHubOnlineAccount>((o, u, g) => u.Id == g.UserId)
+            .Where(o => o.HackathonId == Id)
+            .Select((o, u, g) => new OrganizerModel { GitHubUserName = g.UserName, Type = o.Type })
+            .ToListAsync();
+    }
+
+    private async Task SubmitIsPublished()
+    {
+        Hackathon.IsPublished = !Hackathon.IsPublished;
+        await Db.Updateable(Hackathon).ExecuteCommandAsync();
+    }
+
+    private async Task SubmitParticipantForm()
+    {
+        Hackathon.ShortCode = ParticipantForm.ShortCode;
+        await Db.Updateable(Hackathon).ExecuteCommandAsync();
+    }
+
+    private class OrganizerModel
+    {
+        public string GitHubUserName { get; set; }
+
+        public OrganizerType Type { get; set; }
+    }
+
+    private class ParticipantFormModel
+    {
+        public string? ShortCode { get; set; }
+    }
+
+}

@@ -1,0 +1,154 @@
+@page "/home/organizer/hackathons/{id:guid}"
+
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@attribute [Authorize]
+@attribute [StreamRendering]
+
+@implements IDisposable
+
+@inject NavigationManager Navigation
+@inject ISqlSugarClient Db
+
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+    @if (Model is not null && _editContext is not null)
+    {
+        <EditForm EditContext="_editContext" OnValidSubmit="Submit" FormName="EditHackathon">
+            <HxInputText Label="Name" Placeholder="Enter hackathon's name" @bind-Value="Model!.Name"/>
+            <HxInputTextArea Label="Description" Placeholder="Something exciting here..."
+                             @bind-Value="Model!.Description"/>
+
+            <div class="hx-form-group position-relative">
+                <label class="form-label" for="startDate">
+                    Start date
+                </label>
+                <InputDate id="startDate"
+                           aria-describedby="startDateFeedback"
+                           class=@(EventStartDateIsInvalid ? "form-control is-invalid" : "form-control")
+                           @bind-Value="Model!.EventStartDate"
+                />
+                <ValidationMessage id="startDateFeedback" class="invalid-feedback"
+                                   For="() => Model!.EventStartDate"></ValidationMessage>
+            </div>
+
+            <div class="hx-form-group position-relative">
+                <label class="form-label" for="endDate">
+                    End date
+                </label>
+                <InputDate id="endDate"
+                           aria-describedby="endDateFeedback"
+                           class=@(EventEndDateIsInvalid ? "form-control is-invalid" : "form-control")
+                           @bind-Value="Model!.EventEndDate"
+                />
+                <ValidationMessage id="endDateFeedback" class="invalid-feedback"
+                                   For="() => Model!.EventEndDate"></ValidationMessage>
+            </div>
+
+            <HxInputText Label="Venue" Placeholder="Where is your event?" @bind-Value="Model!.Venue"/>
+            <HxInputText Label="Website" Placeholder="Your event website" @bind-Value="Model!.HomepageUri"/>
+
+            <div>
+                <HxSubmit Color="ThemeColor.Primary">Submit</HxSubmit>
+            </div>
+        </EditForm>
+    }
+</NavContainer>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private EditContext? _editContext;
+    private ValidationMessageStore? _messageStore;
+
+    private bool EventStartDateIsInvalid => _editContext!.GetValidationMessages(() => Model!.EventStartDate).Any();
+
+    private bool EventEndDateIsInvalid => _editContext!.GetValidationMessages(() => Model!.EventEndDate).Any();
+
+    [SupplyParameterFromForm]
+    private UpdateHackathonModel? Model { get; set; }
+
+    private Entities.Hackathon? Hackathon { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon = await Db.Queryable<Entities.Hackathon>().SingleAsync(h => h.Id == Id);
+        if (Hackathon is null)
+        {
+            Navigation.NavigateTo("home");
+            return;
+        }
+
+        Model ??= new UpdateHackathonModel
+        {
+            Name = Hackathon.Name,
+            Description = Hackathon.Description,
+            EventStartDate = Hackathon.EventStartDate,
+            EventEndDate = Hackathon.EventEndDate,
+            Venue = Hackathon.Venue,
+            HomepageUri = Hackathon.HomepageUri
+        };
+
+        _editContext ??= new EditContext(Model);
+        _editContext.OnValidationRequested += HandleValidationRequested;
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+
+    private void HandleValidationRequested(
+        object? sender,
+        ValidationRequestedEventArgs args
+    )
+    {
+        _messageStore?.Clear();
+
+        if (string.IsNullOrWhiteSpace(Model!.Name))
+        {
+            _messageStore?.Add(() => Model.Name, "Name must not be empty hahahaha");
+        }
+    }
+
+    private async Task Submit()
+    {
+        var hackathon = new Entities.Hackathon
+        {
+            Id = Id,
+            Name = Model!.Name ?? throw new Exception(),
+            Description = Model!.Description ?? throw new Exception(),
+            EventStartDate = Model.EventStartDate ?? DateTimeOffset.Now,
+            EventEndDate = Model.EventEndDate ?? DateTimeOffset.Now,
+            Venue = Model!.Venue ?? throw new Exception(),
+            ShortCode = Hackathon?.ShortCode ?? throw new Exception(),
+            HomepageUri = Model!.HomepageUri ?? throw new Exception()
+        };
+
+        var entity = await Db.Updateable(hackathon).ExecuteReturnEntityAsync();
+
+        Navigation.NavigateTo($"home/hackathons/{entity.Id}");
+    }
+
+    public class UpdateHackathonModel
+    {
+        public string? Name { get; set; }
+
+        public string? Description { get; set; }
+
+        public string? Venue { get; set; }
+
+        public string? HomepageUri { get; set; }
+
+        public DateTimeOffset? EventStartDate { get; set; }
+
+        public DateTimeOffset? EventEndDate { get; set; }
+    }
+
+    public void Dispose()
+    {
+        if (_editContext is not null)
+        {
+            _editContext.OnValidationRequested -= HandleValidationRequested;
+        }
+    }
+
+}

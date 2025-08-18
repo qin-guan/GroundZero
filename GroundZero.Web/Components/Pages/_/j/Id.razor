@@ -1,0 +1,100 @@
+@page "/_/j/{secret:guid}"
+
+@using GroundZero.Web.Client.Layout
+@using GroundZero.Web.Entities
+@using SqlSugar
+
+@layout LandingLayout
+
+@inject ISqlSugarClient Db
+
+@if (Hackathon is null)
+{
+    <h1>Hackathon not found :(</h1>
+    <a href="/home/organizer/hackathons/new">Create your own</a>
+    <span>hackathon instead?</span>
+
+    return;
+}
+
+<h2>Welcome, @Judge?.Name!</h2>
+
+<p>
+    You are invited to be a judge for @Hackathon.Name. We appreciate you spending the time and effort to come down!
+</p>
+
+<HxCard>
+    <HeaderTemplate>Hackathon details</HeaderTemplate>
+    <BodyTemplate>
+        <div class="vstack gap-2">
+            <div class="hstack gap-3">
+                <strong>Name</strong>
+                <span class="ms-auto">@Hackathon.Name</span>
+            </div>
+            <div class="hstack gap-3">
+                <strong>Venue</strong>
+                <span class="ms-auto">@Hackathon.Venue</span>
+            </div>
+            <hr/>
+            <div class="hstack gap-3">
+                <strong>Judging date</strong>
+                <span class="ms-auto">@Hackathon.JudgingStartDate.Date.ToShortDateString()</span>
+            </div>
+            <div class="hstack gap-3">
+                <strong>Start</strong>
+                <span class="ms-auto">@Hackathon.JudgingStartDate.DateTime.ToShortTimeString()</span>
+            </div>
+            <div class="hstack gap-3">
+                <strong>End</strong>
+                <span class="ms-auto">@Hackathon.JudgingEndDate.DateTime.ToShortTimeString()</span>
+            </div>
+        </div>
+    </BodyTemplate>
+</HxCard>
+
+<br/>
+
+<section>
+    <h5>Judging process</h5>
+    <ol>
+        <li>Judging starts</li>
+        <li>Platform assigns team to you</li>
+        <li>Visit team at designed location</li>
+        <li>Team presents pitch</li>
+        <li>Vote on platform</li>
+    </ol>
+</section>
+
+<hr/>
+
+@if (DateTimeOffset.Now > Hackathon.JudgingStartDate && DateTimeOffset.Now < Hackathon.JudgingEndDate)
+{
+    <a href="@($"/_/j/{Secret}/judge")" class="btn btn-primary">Start judging</a>
+}
+else
+{
+    <button type="button" disabled class="btn btn-disabled btn-primary">Judging not active now</button>
+}
+
+@code {
+
+    [Parameter]
+    public Guid? Secret { get; set; }
+
+    private Entities.Judge? Judge { get; set; }
+
+    private Hackathon? Hackathon { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var entity = await Db.Queryable<Entities.Judge>()
+            .LeftJoin<Hackathon>((j, h) => j.HackathonId == h.Id)
+            .Where((j, h) => j.Secret == Secret)
+            .Select((j, h) => new { Judge = j, Hackathon = h })
+            .SingleAsync();
+
+        Judge = entity.Judge;
+        Hackathon = entity.Hackathon;
+    }
+
+}

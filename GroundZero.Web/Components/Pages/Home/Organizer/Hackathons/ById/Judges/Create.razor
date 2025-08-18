@@ -1,0 +1,101 @@
+@page "/home/organizer/hackathons/{id:guid}/judges/create"
+
+@using GroundZero.Web.Entities
+@using Microsoft.AspNetCore.Authorization
+@using nietras.SeparatedValues
+@using SqlSugar
+
+@attribute [Authorize]
+@attribute [StreamRendering]
+
+@inject NavigationManager Navigation
+@inject ISqlSugarClient Db
+
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+    <AdditionalBreadcrumbItems>
+        <HxBreadcrumbItem Text="Judges" Href=@($"/home/organizer/hackathons/{Id}/judges")/>
+        <HxBreadcrumbItem Text="Create"/>
+    </AdditionalBreadcrumbItems>
+
+    <ChildContent>
+        <HxAccordion InitialExpandedItemId="0">
+            <HxAccordionItem Id="0">
+                <HeaderTemplate>Bulk create</HeaderTemplate>
+                <BodyTemplate>
+                    @if (BulkCreateJudgeForm is not null)
+                    {
+                        <EditForm Model="BulkCreateJudgeForm" FormName="@nameof(BulkCreateJudgeForm)"
+                                  OnValidSubmit="SubmitCsv">
+                            <HxInputTextArea
+                                Placeholder=@("name\nJohn Nolan")
+                                rows="5"
+                                @bind-Value="BulkCreateJudgeForm!.Data"
+                                Hint="Paste your CSV file here."
+                            />
+                            <HxSubmit Color="ThemeColor.Primary">Create</HxSubmit>
+                        </EditForm>
+                    }
+                </BodyTemplate>
+            </HxAccordionItem>
+            <HxAccordionItem Id="1">
+                <HeaderTemplate>Normal</HeaderTemplate>
+                <BodyTemplate>
+                </BodyTemplate>
+            </HxAccordionItem>
+        </HxAccordion>
+    </ChildContent>
+</NavContainer>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Hackathon? Hackathon { get; set; }
+
+    [SupplyParameterFromForm]
+    private BulkCreateJudgeFormModel? BulkCreateJudgeForm { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon = await Db.Queryable<Hackathon>()
+            .Includes(h => h.Judges)
+            .SingleAsync(h => h.Id == Id);
+
+        if (Hackathon is null)
+        {
+            Navigation.NavigateTo("home");
+            return;
+        }
+
+        BulkCreateJudgeForm ??= new BulkCreateJudgeFormModel();
+    }
+
+    private async Task SubmitCsv()
+    {
+        using var reader = Sep
+            .Reader(o => o with { Sep = new Sep(',') })
+            .FromText(BulkCreateJudgeForm!.Data);
+
+        var judges = new List<Judge>();
+
+        foreach (var row in reader)
+        {
+            var name = row["name"].Parse<string>();
+            judges.Add(new Judge
+            {
+                Name = name,
+                HackathonId = Id
+            });
+        }
+
+        await Db.Insertable(judges).ExecuteCommandAsync();
+        Navigation.NavigateTo($"/home/organizer/hackathons/{Id}/judges");
+    }
+
+    public class BulkCreateJudgeFormModel
+    {
+        public string? Data { get; set; }
+    }
+
+}
