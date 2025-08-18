@@ -14,46 +14,67 @@
 @inject ISqlSugarClient Db
 
 <NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
-    <div class="d-flex justify-content-between align-items-center">
-        <a class="btn btn-primary" href=@($"/home/organizer/hackathons/{Id}/judges/create")>Add</a>
-    </div>
-
     <div class="mt-2">
-        @if (Hackathon?.Judges.Count == 0)
-        {
-            <span>Nothing here yet, add a judge!</span>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table caption-top">
-                    <caption>Judges</caption>
-                    <thead>
+        <div class="table-responsive">
+            <table class="table caption-top">
+                <caption>
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <strong>
+                            Judges
+                        </strong>
+                        <a class="btn btn-primary" href=@($"/home/organizer/hackathons/{Id}/judges/create")>Add</a>
+                    </div>
+                </caption>
+                <thead>
+                <tr>
+                    <th scope="col">
+                        ID
+                    </th>
+                    <th scope="col">
+                        Name
+                    </th>
+                    <th scope="col">
+                        Alpha
+                    </th>
+                    <th scope="col">
+                        Beta
+                    </th>
+                    <th scope="col">
+                        Next Team
+                    </th>
+                    <th scope="col">
+                        Previous Team
+                    </th>
+                    <th scope="col">
+                        Actions
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+
+                @if (Hackathon is null)
+                {
                     <tr>
-                        <th scope="col">
-                            ID
-                        </th>
-                        <th scope="col">
-                            Name
-                        </th>
-                        <th scope="col">
-                            Alpha
-                        </th>
-                        <th scope="col">
-                            Beta
-                        </th>
-                        <th scope="col">
-                            Next Team
-                        </th>
-                        <th scope="col">
-                            Previous Team
-                        </th>
-                        <th scope="col">
-                            Actions
-                        </th>
+                        <td colspan="7">
+                            <i>
+                                Loading...
+                            </i>
+                        </td>
                     </tr>
-                    </thead>
-                    <tbody>
+                }
+                else if (Hackathon.Judges is null or { Count: 0 })
+                {
+                    <tr>
+                        <td colspan="7">
+                            <i>
+                                No data
+                            </i>
+                        </td>
+                    </tr>
+                }
+                else
+                {
                     @foreach (var judge in Hackathon?.Judges ?? [])
                     {
                         <tr>
@@ -80,16 +101,20 @@
                             </td>
                         </tr>
                     }
-                    </tbody>
-                </table>
-            </div>
-        }
+                }
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="mt-2">
         <div class="table-responsive">
             <table class="table caption-top">
-                <caption>Decisions</caption>
+                <caption>
+                    <strong>
+                        Decisions
+                    </strong>
+                </caption>
                 <thead>
                 <tr>
                     <th scope="col">
