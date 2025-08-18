@@ -7,10 +7,22 @@
 @attribute [Authorize]
 @attribute [StreamRendering]
 
+@rendermode InteractiveServer
+
 @inject NavigationManager Navigation
 @inject ISqlSugarClient Db
 
 <NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+    <HxGrid TItem="Team" DataProvider="DataProvider">
+        <Columns>
+            <HxGridColumn HeaderText="Name" ItemTextSelector="team => team.Name"/>
+            <HxGridColumn HeaderText="Active" ItemTextSelector="team => team.Active.ToString()"/>
+            <HxGridColumn HeaderText="Prioritized" ItemTextSelector="team => team.Prioritized.ToString()"/>
+            <HxGridColumn HeaderText="SigmaSq" ItemTextSelector="team => team.SigmaSq.ToString()"/>
+            <HxGridColumn HeaderText="Mu" ItemTextSelector="team => team.Mu.ToString()"/>
+            <HxGridColumn HeaderText="Location" ItemTextSelector="team => team.Location"/>
+        </Columns>
+    </HxGrid>
 </NavContainer>
 
 @code {
@@ -18,19 +30,22 @@
     [Parameter]
     public Guid Id { get; set; }
 
-    private Hackathon? Hackathon { get; set; }
+    [PersistentState]
+    public Hackathon? Hackathon { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    public async Task<GridDataProviderResult<Team>> DataProvider(GridDataProviderRequest<Team> _)
     {
-        Hackathon = await Db.Queryable<Hackathon>()
+        Hackathon ??= await Db.Queryable<Hackathon>()
             .Includes(h => h.Teams)
             .SingleAsync(h => h.Id == Id);
 
-        if (Hackathon is null)
+        StateHasChanged();
+
+        return new GridDataProviderResult<Team>
         {
-            Navigation.NavigateTo("home");
-            return;
-        }
+            Data = Hackathon.Teams,
+            TotalCount = Hackathon.Teams.Count
+        };
     }
 
 }
