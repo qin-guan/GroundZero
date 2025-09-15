@@ -45,16 +45,16 @@
 
     [PersistentState] public List<Decision>? Decisions { get; set; }
 
-    public async Task<GridDataProviderResult<Judge>> DataProvider(GridDataProviderRequest<Judge> _)
+    public async Task<GridDataProviderResult<Judge>> DataProvider(GridDataProviderRequest<Judge> request)
     {
         Hackathon ??= await Db.Queryable<Hackathon>()
             .Includes(h => h.Judges, j => j.NextTeam)
             .Includes(h => h.Judges, j => j.PreviousTeam)
             .SingleAsync(h => h.Id == Id);
-
+        
         return new GridDataProviderResult<Judge>
         {
-            Data = Hackathon.Judges,
+            Data = Hackathon.Judges.AsQueryable().ApplyGridDataProviderRequest(request),
             TotalCount = Hackathon.Judges.Count
         };
     }

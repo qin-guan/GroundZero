@@ -2,6 +2,9 @@
 @using GroundZero.Web.Entities
 @using SqlSugar
 
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
 @inject ISqlSugarClient Db
 
 <NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
