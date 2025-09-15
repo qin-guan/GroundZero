@@ -1,12 +1,23 @@
 @page "/home/hackathons/organizer/{id:guid}/decisions"
+@using GroundZero.Web.Entities
+@using SqlSugar
 
+@inject ISqlSugarClient Db
 
-<NavContainer>
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
     <h3>Decisions</h3>
 </NavContainer>
 
 @code {
 
     [Parameter] public Guid Id { get; set; }
+    [PersistentState] public Hackathon? Hackathon { get; set; }
 
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon ??= await Db.Queryable<Hackathon>()
+            .Includes(h => h.Judges, j => j.NextTeam)
+            .Includes(h => h.Judges, j => j.PreviousTeam)
+            .SingleAsync(h => h.Id == Id);
+    }
 }
