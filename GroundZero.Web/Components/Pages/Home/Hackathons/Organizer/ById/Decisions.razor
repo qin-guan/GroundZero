@@ -8,13 +8,25 @@
 @inject ISqlSugarClient Db
 
 <NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
-    <h3>Decisions</h3>
+    <HxListLayout Title="Decisions" TFilterModel="HxListLayout.NoFilter">
+        <DataTemplate>
+            <HxGrid TItem="Decision" DataProvider="DataProvider" Responsive="true">
+                <Columns>
+                    <HxGridColumn HeaderText="ID" ItemTextSelector="j => j.Id.ToString()"></HxGridColumn>
+                    <HxGridColumn HeaderText="Name" ItemTextSelector="j => j.WinnerId.ToString()"></HxGridColumn>
+                    <HxGridColumn HeaderText="Alpha" ItemTextSelector="j => j.LoserId.ToString()"></HxGridColumn>
+                </Columns>
+            </HxGrid>
+        </DataTemplate>
+    </HxListLayout>
 </NavContainer>
 
 @code {
 
     [Parameter] public Guid Id { get; set; }
+    
     [PersistentState] public Hackathon? Hackathon { get; set; }
+    [PersistentState] public List<Decision>? DecisionList { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -22,5 +34,19 @@
             .Includes(h => h.Judges, j => j.NextTeam)
             .Includes(h => h.Judges, j => j.PreviousTeam)
             .SingleAsync(h => h.Id == Id);
+    }
+    
+    public async Task<GridDataProviderResult<Decision>> DataProvider(GridDataProviderRequest<Decision> request)
+    {
+        var data = await Db.Queryable<Decision>()
+            .Includes(d => d.Judge)
+            .Where(d => d.Judge.HackathonId == Id)
+            .ToListAsync();
+        
+        return new GridDataProviderResult<Decision>
+        {
+            Data = data.AsQueryable().ApplyGridDataProviderRequest(request),
+            TotalCount = data.Count
+        };
     }
 }
