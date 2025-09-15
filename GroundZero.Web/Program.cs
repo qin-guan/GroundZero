@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Security.Claims;
 using AspNet.Security.OAuth.GitHub;
 using FastEndpoints;
