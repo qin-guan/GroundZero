@@ -1,4 +1,4 @@
-@page "/home/organizer/hackathons/{id:guid}/judges/create"
+@page "/home/hackathons/organizer/{id:guid}/judges/create"
 
 @using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
@@ -13,7 +13,7 @@
 
 <NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
     <AdditionalBreadcrumbItems>
-        <HxBreadcrumbItem Text="Judges" Href=@($"/home/organizer/hackathons/{Id}/judges")/>
+        <HxBreadcrumbItem Text="Judges" Href=@($"/home/hackathons/organizer/{Id}/judges")/>
         <HxBreadcrumbItem Text="Create"/>
     </AdditionalBreadcrumbItems>
 
@@ -30,7 +30,7 @@
                                 Placeholder=@("name\nJohn Nolan")
                                 rows="5"
                                 @bind-Value="BulkCreateJudgeForm!.Data"
-                                Hint="Paste your CSV file here."
+                                Hint="Paste your CSV file here (incl. headers)"
                             />
                             <HxSubmit Color="ThemeColor.Primary">Create</HxSubmit>
                         </EditForm>
@@ -90,7 +90,7 @@
         }
 
         await Db.Insertable(judges).ExecuteCommandAsync();
-        Navigation.NavigateTo($"/home/organizer/hackathons/{Id}/judges");
+        Navigation.NavigateTo($"/home/hackathons/organizer/{Id}/judges");
     }
 
     public class BulkCreateJudgeFormModel

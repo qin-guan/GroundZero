@@ -1,0 +1,37 @@
+<div class="p-4 d-flex flex-column flex-grow-1">
+    <HxBreadcrumb>
+        <HxBreadcrumbItem Href="home/hackathons" Text="Hackathons"/>
+        <HxBreadcrumbItem Href="home/hackathons/organizer" Text="Organizing"/>
+        <HxBreadcrumbItem Text=@(HackathonName ?? "Loading...")/>
+        @AdditionalBreadcrumbItems
+    </HxBreadcrumb>
+
+    <div class="row flex-grow-1">
+        <HxNav Variant="NavVariant.Pills" Orientation="NavOrientation.Vertical" CssClass="col">
+            <HxNavLink Href=@($"/home/hackathons/organizer/{HackathonId}/") Match="NavLinkMatch.All" Text="General"/>
+            <HxNavLink Href=@($"/home/hackathons/organizer/{HackathonId}/judges") Text="Judges"/>
+            <HxNavLink Href=@($"/home/hackathons/organizer/{HackathonId}/decisions") Text="Decisions"/>
+            <HxNavLink Href=@($"/home/hackathons/organizer/{HackathonId}/teams") Text="Teams"/>
+            <HxNavLink Href=@($"/home/hackathons/organizer/{HackathonId}/participants") Text="Participants"/>
+            <HxNavLink Href=@($"/home/hackathons/organizer/{HackathonId}/sharing") Text="Sharing"/>
+            <HxNavLink Href=@($"/home/hackathons/organizer/{HackathonId}/advanced") Text="Advanced"
+                       CssClass="link-danger"/>
+        </HxNav>
+
+        <div class="bg-body-tertiary rounded p-3 col-10">
+            @ChildContent
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public RenderFragment? AdditionalBreadcrumbItems { get; set; }
+
+    [Parameter] public string? HackathonName { get; set; }
+
+    [Parameter] public Guid? HackathonId { get; set; }
+
+}

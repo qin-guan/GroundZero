@@ -5,10 +5,25 @@
 <HxMessenger Position="ToastContainerPosition.BottomCenter"/>
 <HxMessageBoxHost/>
 
-<div class="d-md-flex min-vh-100">
-    <NavMenu @rendermode="InteractiveAuto"/>
+<div class="d-flex flex-column min-vh-100">
+    <HxNavbar CssClass="bg-body-tertiary">
+        <HxNavbarBrand Href="/home/hackathons">GroundZero</HxNavbarBrand>
+        <HxNavbarToggler />
+        <HxNavbarCollapse>
+            <HxNav CssClass="me-auto">
+                <HxNavLink Href="/home/hackathons">Hackathons</HxNavLink>
+                <HxNavLink Href="/home/events">Events</HxNavLink>
+                <HxNavLink Href="/home/settings">Settings</HxNavLink>
+            </HxNav>
+            <HxNavbarText>
+                <small>
+                    @@@RendererInfo.IsInteractive
+                </small>
+            </HxNavbarText>
+        </HxNavbarCollapse>
+    </HxNavbar>
 
-    <div class="main flex-grow-1">
+    <div class="d-flex flex-column flex-grow-1">
         @Body
     </div>
 </div>

@@ -1,4 +1,4 @@
-@page "/home/organizer/hackathons/new"
+@page "/home/hackathons/organizer/new"
 @using GroundZero.Web.Authentication
 @using GroundZero.Web.Entities
 @using Microsoft.AspNetCore.Authorization
@@ -12,47 +12,52 @@
 @inject NavigationManager Navigation
 @inject ISqlSugarClient Db
 
-<h3>New Hackathon</h3>
+<div class="p-lg-4 p-3">
+    <HxBreadcrumb>
+        <HxBreadcrumbItem Href="/home/hackathons" Text="Hackathons"/>
+        <HxBreadcrumbItem Href="/home/hackathons/organizer" Text="Organizing"/>
+        <HxBreadcrumbItem Href="/home/hackathons/organizer/new" Text="New"/>
+    </HxBreadcrumb>
 
-<EditForm EditContext="_editContext" OnValidSubmit="Submit" FormName="NewHackathon">
-    <HxInputText Label="Name" Placeholder="Enter hackathon's name" @bind-Value="Model!.Name"/>
-    <HxInputText Label="Short code" Placeholder="abcdef" Hint="Participants will use this short code to join your hackathon"
-                 @bind-Value="Model!.ShortCode"/>
-    <HxInputTextArea Label="Description" Placeholder="Something exciting here..." @bind-Value="Model!.Description"/>
+    <EditForm EditContext="_editContext" OnValidSubmit="Submit" FormName="NewHackathon">
+        <HxInputText Label="Name" Placeholder="Enter hackathon's name" @bind-Value="Model!.Name"/>
+        <HxInputText Label="Short code" Placeholder="abcdef"
+                     Hint="Participants will use this short code to join your hackathon"
+                     @bind-Value="Model!.ShortCode"/>
+        <HxInputTextArea Label="Description" Placeholder="Something exciting here..." @bind-Value="Model!.Description"/>
 
-    <div class="hx-form-group position-relative">
-        <label class="form-label" for="startDate">
-            Start date
-        </label>
-        <InputDate id="startDate"
-                   aria-describedby="startDateFeedback"
-                   class=@(EventStartDateIsInvalid ? "form-control is-invalid" : "form-control")
-                   @bind-Value="Model!.EventStartDate"
-        />
-        <ValidationMessage id="startDateFeedback" class="invalid-feedback"
-                           For="() => Model!.EventStartDate"></ValidationMessage>
-    </div>
+        <div class="hx-form-group position-relative">
+            <label class="form-label" for="startDate">
+                Start date
+            </label>
+            <InputDate id="startDate"
+                       aria-describedby="startDateFeedback"
+                       class=@(EventStartDateIsInvalid ? "form-control is-invalid" : "form-control")
+                                              @bind-Value="Model!.EventStartDate"/>
+            <ValidationMessage id="startDateFeedback" class="invalid-feedback"
+                               For="() => Model!.EventStartDate"></ValidationMessage>
+        </div>
 
-    <div class="hx-form-group position-relative">
-        <label class="form-label" for="endDate">
-            End date
-        </label>
-        <InputDate id="endDate"
-                   aria-describedby="endDateFeedback"
-                   class=@(EventEndDateIsInvalid ? "form-control is-invalid" : "form-control")
-                   @bind-Value="Model!.EventEndDate"
-        />
-        <ValidationMessage id="endDateFeedback" class="invalid-feedback"
-                           For="() => Model!.EventEndDate"></ValidationMessage>
-    </div>
+        <div class="hx-form-group position-relative">
+            <label class="form-label" for="endDate">
+                End date
+            </label>
+            <InputDate id="endDate"
+                       aria-describedby="endDateFeedback"
+                       class=@(EventEndDateIsInvalid ? "form-control is-invalid" : "form-control")
+                                              @bind-Value="Model!.EventEndDate"/>
+            <ValidationMessage id="endDateFeedback" class="invalid-feedback"
+                               For="() => Model!.EventEndDate"></ValidationMessage>
+        </div>
 
-    <HxInputText Label="Venue" Placeholder="Where is your event?" @bind-Value="Model!.Venue"/>
-    <HxInputText Label="Website" Placeholder="Your event website" @bind-Value="Model!.HomepageUri"/>
+        <HxInputText Label="Venue" Placeholder="Where is your event?" @bind-Value="Model!.Venue"/>
+        <HxInputText Label="Website" Placeholder="Your event website" @bind-Value="Model!.HomepageUri"/>
 
-    <div>
-        <HxSubmit Color="ThemeColor.Primary">Create</HxSubmit>
-    </div>
-</EditForm>
+        <div>
+            <HxSubmit Color="ThemeColor.Primary">Create</HxSubmit>
+        </div>
+    </EditForm>
+</div>
 
 @code {
 
@@ -63,8 +68,7 @@
 
     private bool EventEndDateIsInvalid => _editContext!.GetValidationMessages(() => Model!.EventEndDate).Any();
 
-    [SupplyParameterFromForm]
-    private Hackathon? Model { get; set; }
+    [SupplyParameterFromForm] private Hackathon? Model { get; set; }
 
     protected override void OnInitialized()
     {
@@ -83,7 +87,7 @@
 
         if (string.IsNullOrWhiteSpace(Model!.Name))
         {
-            _messageStore?.Add(() => Model!.Name, "Name must not be empty hahahaha");
+            _messageStore?.Add(() => Model!.Name, "Name must not be empty");
         }
 
         if (Model!.EventStartDate < DateTimeOffset.Now)
@@ -106,13 +110,13 @@
     {
         var shortCodeTaken = await Db.Queryable<Entities.Hackathon>()
             .AnyAsync(h => h.ShortCode == Model!.ShortCode);
-        
+
         if (shortCodeTaken)
         {
             _messageStore?.Add(() => Model.ShortCode, "This short code is not available anymore!");
             return;
         }
-        
+
         var hackathon = new Entities.Hackathon
         {
             Name = Model!.Name ?? throw new Exception(),
@@ -130,14 +134,14 @@
                 }
             ]
         };
-        
+
         Console.WriteLine(HttpContextAccessor.HttpContext!.User.GetUserId());
 
         var entity = await Db.InsertNav(hackathon)
             .Include(h => h.Organizers)
             .ExecuteReturnEntityAsync();
 
-        Navigation.NavigateTo($"home/hackathons/{entity.Id}");
+        Navigation.NavigateTo($"home/hackathons/organizer/{entity.Id}");
     }
 
     public class Hackathon

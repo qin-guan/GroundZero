@@ -1,0 +1,52 @@
+@page "/home/hackathons"
+@using GroundZero.Web.Authentication
+@using GroundZero.Web.Entities
+@using SqlSugar
+
+@inject ISqlSugarClient SqlClient
+@inject IHttpContextAccessor HttpContextAccessor
+
+<div class="p-lg-4 p-3">
+    <h3 class="mb-4">Your hackathons</h3>
+
+    <div class="row gap-3">
+        <div class="col-12 col-sm-6">
+            <HxCard>
+                <BodyTemplate>
+                    <small class="text-muted">Participating</small>
+                    <br/>
+                    <span class="fw-semibold fs-3">@ParticipatingCount</span>
+                </BodyTemplate>
+                <FooterTemplate>
+                    <a href="/home/hackathons/participant">Open</a>
+                </FooterTemplate>
+            </HxCard>
+        </div>
+
+        <div class="col">
+            <HxCard>
+                <BodyTemplate>
+                    <small class="text-muted">Organizing</small>
+                    <br/>
+                    <span class="fw-semibold fs-3">@OrganizingCount</span>
+                </BodyTemplate>
+                <FooterTemplate>
+                    <a href="/home/hackathons/organizer">Open</a>
+                </FooterTemplate>
+            </HxCard>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    public int ParticipatingCount { get; set; }
+    public int OrganizingCount { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ParticipatingCount = await SqlClient.Queryable<Entities.Participant>().CountAsync(p => p.UserId == HttpContextAccessor.HttpContext!.User.GetUserId());
+        OrganizingCount = await SqlClient.Queryable<Entities.Organizer>().CountAsync(o => o.UserId == HttpContextAccessor.HttpContext!.User.GetUserId());
+    }
+
+}
