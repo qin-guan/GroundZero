@@ -23,7 +23,10 @@ builder.Services.AddHxMessenger();
 builder.Services.AddHxMessageBoxHost();
 
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
+    .AddInteractiveServerComponents().AddHubOptions(options =>
+    {
+        options.MaximumReceiveMessageSize = null;
+    })
     .AddInteractiveWebAssemblyComponents()
     .AddAuthenticationStateSerialization();
 
@@ -174,7 +177,7 @@ app.MapGet("/auth/github/login",
     {
         await context.ChallengeAsync(new AuthenticationProperties
         {
-            RedirectUri = "/home/organizer"
+            RedirectUri = "/home/hackathons"
         });
     });
 app.MapGet("/auth/logout",
