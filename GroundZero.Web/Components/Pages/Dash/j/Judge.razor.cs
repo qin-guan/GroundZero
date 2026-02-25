@@ -4,7 +4,7 @@ using GroundZero.Web.Entities;
 using Microsoft.AspNetCore.Components;
 using SqlSugar;
 
-namespace GroundZero.Web.Components.Pages._.j;
+namespace GroundZero.Web.Components.Pages.Dash.j;
 
 public partial class Judge : ComponentBase, IDisposable
 {

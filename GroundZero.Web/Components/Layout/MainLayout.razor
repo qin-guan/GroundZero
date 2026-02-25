@@ -6,18 +6,16 @@
 <div class="d-flex flex-column min-vh-100">
     <HxNavbar CssClass="bg-body-tertiary">
         <HxNavbarBrand Href="/home/hackathons">GroundZero</HxNavbarBrand>
-        <HxNavbarToggler />
+        <HxNavbarToggler/>
         <HxNavbarCollapse>
             <HxNav CssClass="me-auto">
                 <HxNavLink Href="/home/hackathons">Hackathons</HxNavLink>
                 <HxNavLink Href="/home/events">Events</HxNavLink>
+            </HxNav>
+            
+            <HxNav>
                 <HxNavLink Href="/home/settings">Settings</HxNavLink>
             </HxNav>
-            <HxNavbarText>
-                <small>
-                    @@@RendererInfo.IsInteractive
-                </small>
-            </HxNavbarText>
         </HxNavbarCollapse>
     </HxNavbar>
 

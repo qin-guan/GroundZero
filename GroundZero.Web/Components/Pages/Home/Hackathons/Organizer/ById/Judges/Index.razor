@@ -21,12 +21,14 @@
         </CommandsTemplate>
 
         <DataTemplate>
-            <HxGrid TItem="Judge" DataProvider="DataProvider" Responsive="true">
+            <HxGrid TItem="Judge" DataProvider="DataProvider" Responsive="true" PageSize="20">
                 <Columns>
                     <HxGridColumn HeaderText="ID" ItemTextSelector="j => j.Id.ToString()"></HxGridColumn>
                     <HxGridColumn HeaderText="Name" ItemTextSelector="j => j.Name.ToString()"></HxGridColumn>
-                    <HxGridColumn HeaderText="Alpha" ItemTextSelector="j => j.Alpha.ToString(CultureInfo.InvariantCulture)"></HxGridColumn>
-                    <HxGridColumn HeaderText="Beta" ItemTextSelector="j => j.Beta.ToString(CultureInfo.InvariantCulture)"></HxGridColumn>
+                    <HxGridColumn HeaderText="Alpha"
+                                  ItemTextSelector="j => j.Alpha.ToString(CultureInfo.InvariantCulture)"></HxGridColumn>
+                    <HxGridColumn HeaderText="Beta"
+                                  ItemTextSelector="j => j.Beta.ToString(CultureInfo.InvariantCulture)"></HxGridColumn>
                     <HxGridColumn HeaderText="Next Team"
                                   ItemTextSelector="j => j.NextTeamId.ToString()"></HxGridColumn>
                     <HxGridColumn HeaderText="Previous Team"
@@ -51,7 +53,7 @@
             .Includes(h => h.Judges, j => j.NextTeam)
             .Includes(h => h.Judges, j => j.PreviousTeam)
             .SingleAsync(h => h.Id == Id);
-        
+
         return new GridDataProviderResult<Judge>
         {
             Data = Hackathon.Judges.AsQueryable().ApplyGridDataProviderRequest(request),
