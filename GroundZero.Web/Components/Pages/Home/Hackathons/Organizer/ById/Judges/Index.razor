@@ -1,0 +1,72 @@
+@page "/home/hackathons/organizer/{id:guid}/judges"
+
+@using System.Globalization
+@using GroundZero.Web.Entities
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+@attribute [StreamRendering]
+
+@inject ISqlSugarClient Db
+
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+    <HxListLayout Title="Judges" TFilterModel="HxListLayout.NoFilter">
+        <CommandsTemplate>
+            <a class="hx-button btn btn-primary" href="@($"/home/hackathons/organizer/{Id}/judges/create")">
+                Create Judge
+            </a>
+        </CommandsTemplate>
+
+        <DataTemplate>
+            <HxGrid TItem="Judge" DataProvider="DataProvider" Responsive="true" PageSize="20">
+                <Columns>
+                    <HxGridColumn HeaderText="ID" ItemTextSelector="j => j.Id.ToString()"></HxGridColumn>
+                    <HxGridColumn HeaderText="Name" ItemTextSelector="j => j.Name.ToString()"></HxGridColumn>
+                    <HxGridColumn HeaderText="Alpha"
+                                  ItemTextSelector="j => j.Alpha.ToString(CultureInfo.InvariantCulture)"></HxGridColumn>
+                    <HxGridColumn HeaderText="Beta"
+                                  ItemTextSelector="j => j.Beta.ToString(CultureInfo.InvariantCulture)"></HxGridColumn>
+                    <HxGridColumn HeaderText="Next Team"
+                                  ItemTextSelector="j => j.NextTeamId.ToString()"></HxGridColumn>
+                    <HxGridColumn HeaderText="Previous Team"
+                                  ItemTextSelector="j => j.PreviousTeamId.ToString()"></HxGridColumn>
+                </Columns>
+            </HxGrid>
+        </DataTemplate>
+    </HxListLayout>
+</NavContainer>
+
+@code {
+
+    [Parameter] public Guid Id { get; set; }
+
+    [PersistentState] public Hackathon? Hackathon { get; set; }
+
+    [PersistentState] public List<Decision>? Decisions { get; set; }
+
+    public async Task<GridDataProviderResult<Judge>> DataProvider(GridDataProviderRequest<Judge> request)
+    {
+        Hackathon ??= await Db.Queryable<Hackathon>()
+            .Includes(h => h.Judges, j => j.NextTeam)
+            .Includes(h => h.Judges, j => j.PreviousTeam)
+            .SingleAsync(h => h.Id == Id);
+
+        return new GridDataProviderResult<Judge>
+        {
+            Data = Hackathon.Judges.AsQueryable().ApplyGridDataProviderRequest(request),
+            TotalCount = Hackathon.Judges.Count
+        };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon ??= await Db.Queryable<Hackathon>()
+            .Includes(h => h.Judges, j => j.NextTeam)
+            .Includes(h => h.Judges, j => j.PreviousTeam)
+            .SingleAsync(h => h.Id == Id);
+    }
+
+}

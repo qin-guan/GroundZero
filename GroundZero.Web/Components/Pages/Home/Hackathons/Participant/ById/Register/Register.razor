@@ -1,0 +1,71 @@
+@page "/home/participant/hackathons/{id:guid}/register"
+
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@attribute [Authorize]
+
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ISqlSugarClient Db
+
+@if (Hackathon is null)
+{
+    return;
+}
+
+<h2>@Hackathon.Name</h2>
+
+@if (!string.IsNullOrWhiteSpace(Hackathon.Description))
+{
+    <p>@Hackathon.Description</p>
+}
+
+<hr/>
+
+<h3>
+    Date
+</h3>
+<p>
+    @Hackathon.EventStartDate.ToString("d") - @Hackathon.EventEndDate.ToString("d")
+    (@((Hackathon.EventEndDate - Hackathon.EventStartDate).TotalDays.ToString("N0")) days)
+</p>
+
+@if (!string.IsNullOrWhiteSpace(Hackathon.Venue))
+{
+    <h3>
+        Location
+    </h3>
+    <p>
+        @Hackathon.Venue
+    </p>
+}
+
+<br/>
+
+<a class="btn btn-primary" href=@($"/home/participant/hackathons/{Id}/register/join-team")>Join team</a>
+<a class="btn" href=@($"/home/participant/hackathons/{Id}/register/create-team")>Create team</a>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Entities.Hackathon? Hackathon { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon = await Db.Queryable<Entities.Hackathon>().Includes(h => h.Organizers).SingleAsync(h => h.Id == Id);
+        if (Hackathon is null)
+        {
+            Navigation.NavigateTo("home");
+            return;
+        }
+        // if (Hackathon.Organizers.Any(o => o.UserId == HttpContextAccessor.HttpContext?.User.GetUserId()))
+        // {
+        //     Navigation.NavigateTo($"home/hackathons/{Id}");
+        //     return;
+        // }
+    }
+
+}

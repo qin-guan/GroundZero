@@ -1,0 +1,98 @@
+@page "/home/hackathons/organizer/{id:guid}/participants"
+
+@using Dm.util
+@using GroundZero.Web.Entities
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@attribute [Authorize]
+@attribute [StreamRendering]
+
+@rendermode InteractiveServer
+
+@inject NavigationManager Navigation
+@inject ISqlSugarClient Db
+
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+    <HxListLayout Title="Participants" TFilterModel="FilterModel" @bind-FilterModel="Filter"
+                  @bind-FilterModel:after="HandleFilterChange">
+        <FilterTemplate Context="filterContext">
+            <HxInputText Label="Name" @bind-Value="filterContext.Name"/>
+            <HxInputText Label="Team ID" @bind-Value="filterContext.TeamId"/>
+        </FilterTemplate>
+
+        <DataTemplate>
+            <HxGrid TItem="Participant" DataProvider="DataProvider" Responsive="true" PageSize="20">
+                <Columns>
+                    <HxGridColumn HeaderText="ID" ItemTextSelector="p => p.UserId.ToString()"></HxGridColumn>
+                </Columns>
+            </HxGrid>
+        </DataTemplate>
+    </HxListLayout>
+</NavContainer>
+
+@code {
+
+    [Parameter] public Guid Id { get; set; }
+
+    [SupplyParameterFromQuery] public string Name { get; set; }
+    [SupplyParameterFromQuery] public string TeamId { get; set; }
+
+    [PersistentState] public Hackathon? Hackathon { get; set; }
+    public FilterModel Filter = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon ??= await Db.Queryable<Hackathon>()
+            .Includes(h => h.Teams)
+            .SingleAsync(h => h.Id == Id);
+    }
+
+    protected override void OnParametersSet()
+    {
+        Filter = new FilterModel
+        {
+            Name = Name,
+            TeamId = TeamId
+        };
+    }
+
+    public async Task<GridDataProviderResult<Participant>> DataProvider(GridDataProviderRequest<Participant> request)
+    {
+        Hackathon ??= await Db.Queryable<Hackathon>()
+            .SingleAsync(h => h.Id == Id);
+
+        var query = Db.Queryable<Participant>()
+            .LeftJoin<User>((p, u) => p.UserId == u.Id)
+            .Where(p => p.HackathonId == Id);
+
+        if (Filter.Name is not null)
+        {
+            query = query.Where((_, u) => u.Name.contains(Filter.Name));
+        }
+
+        if (Filter.TeamId is not null)
+        {
+            query = query.Where(p => p.TeamId.ToString() == Filter.TeamId);
+        }
+
+        var data = await query.ToListAsync();
+
+        return new GridDataProviderResult<Participant>
+        {
+            Data = data.AsQueryable().ApplyGridDataProviderRequest(request),
+            TotalCount = data.ToList().Count
+        };
+    }
+
+    public async Task HandleFilterChange()
+    {
+    }
+
+    public class FilterModel
+    {
+        public string? TeamId { get; set; }
+        public string? Name { get; set; }
+    }
+
+}

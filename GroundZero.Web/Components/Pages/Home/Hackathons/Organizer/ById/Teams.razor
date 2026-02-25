@@ -1,0 +1,62 @@
+@page "/home/hackathons/organizer/{id:guid}/teams"
+
+@using System.Globalization
+@using GroundZero.Web.Entities
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@attribute [Authorize]
+@attribute [StreamRendering]
+
+@rendermode InteractiveServer
+
+@inject NavigationManager Navigation
+@inject ISqlSugarClient Db
+
+<NavContainer HackathonId="Id" HackathonName="@Hackathon?.Name">
+    <HxListLayout Title="Teams" TFilterModel="HxListLayout.NoFilter">
+        <DataTemplate>
+            <HxGrid TItem="Team" DataProvider="DataProvider">
+                <Columns>
+                    <HxGridColumn HeaderText="Name" ItemTextSelector="team => team.Name"/>
+                    <HxGridColumn HeaderText="Active" ItemTextSelector="team => team.Active.ToString()"/>
+                    <HxGridColumn HeaderText="Prioritized" ItemTextSelector="team => team.Prioritized.ToString()"/>
+                    <HxGridColumn HeaderText="SigmaSq"
+                                  ItemTextSelector="team => team.SigmaSq.ToString(CultureInfo.InvariantCulture)"/>
+                    <HxGridColumn HeaderText="Mu"
+                                  ItemTextSelector="team => team.Mu.ToString(CultureInfo.InvariantCulture)"/>
+                    <HxGridColumn HeaderText="Location" ItemTextSelector="team => team.Location"/>
+                    <HxGridColumn HeaderText="Members" ItemTextSelector="team => team.Members.Count.ToString()"/>
+                </Columns>
+            </HxGrid>
+        </DataTemplate>
+    </HxListLayout>
+</NavContainer>
+
+@code {
+
+    [Parameter] public Guid Id { get; set; }
+
+    [PersistentState] public Hackathon? Hackathon { get; set; }
+
+    public async Task<GridDataProviderResult<Team>> DataProvider(GridDataProviderRequest<Team> request)
+    {
+        Hackathon ??= await Db.Queryable<Hackathon>()
+            .Includes(h => h.Teams, t => t.Members)
+            .SingleAsync(h => h.Id == Id);
+
+        return new GridDataProviderResult<Team>
+        {
+            Data = Hackathon.Teams.AsQueryable().ApplyGridDataProviderRequest(request),
+            TotalCount = Hackathon.Teams.Count
+        };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hackathon ??= await Db.Queryable<Hackathon>()
+            .Includes(h => h.Teams, t => t.Members)
+            .SingleAsync(h => h.Id == Id);
+    }
+
+}

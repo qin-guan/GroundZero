@@ -1,0 +1,83 @@
+﻿@page "/home/hackathons/organizer"
+@using GroundZero.Web.Authentication
+@using GroundZero.Web.Entities
+@using Microsoft.AspNetCore.Authorization
+@using SqlSugar
+
+@attribute [Authorize]
+@attribute [StreamRendering]
+
+@inject ISqlSugarClient SqlSugar
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>GroundZero | Hackathons</PageTitle>
+
+<div class="p-lg-4 p-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <HxBreadcrumb>
+            <HxBreadcrumbItem Href="/home/hackathons" Text="Hackathons"/>
+            <HxBreadcrumbItem Href="/home/hackathons/organizer" Text="Organizing"/>
+        </HxBreadcrumb>
+
+        <a class="btn btn-primary" href="/home/hackathons/organizer/new" role="button">New</a>
+    </div>
+
+    <div class="table-responsive mt-3">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col" style="min-width: 100px;">Code</th>
+                <th scope="col" style="min-width: 150px;">Name</th>
+                <th scope="col">Start</th>
+                <th scope="col">End</th>
+                <th scope="col">Website</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var hack in Hackathons)
+            {
+                <tr>
+                    <td>
+                        <a href="/home/hackathons/organizer/@hack.Id">
+                            @hack.ShortCode
+                        </a>
+                    </td>
+
+                    <td>
+                        @hack.Name
+                    </td>
+
+                    <td>
+                        @hack.EventStartDate.Date.ToShortDateString()
+                    </td>
+
+                    <td>
+                        @hack.EventEndDate.Date.ToShortDateString()
+                    </td>
+
+                    <td>
+                        @hack.HomepageUri
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+
+    private List<Hackathon> Hackathons { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = HttpContextAccessor.HttpContext!.User.GetUserId();
+
+        Hackathons = await SqlSugar.Queryable<Organizer>()
+            .LeftJoin<Hackathon>((o, h) => o.HackathonId == h.Id)
+            .Where(o => o.UserId == userId)
+            .Select((o, h) => h)
+            .ToListAsync();
+    }
+
+}

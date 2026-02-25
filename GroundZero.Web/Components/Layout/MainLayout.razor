@@ -1,0 +1,31 @@
+﻿@inherits LayoutComponentBase
+
+<HxMessenger Position="ToastContainerPosition.BottomCenter"/>
+<HxMessageBoxHost/>
+
+<div class="d-flex flex-column min-vh-100">
+    <HxNavbar CssClass="bg-body-tertiary">
+        <HxNavbarBrand Href="/home/hackathons">GroundZero</HxNavbarBrand>
+        <HxNavbarToggler/>
+        <HxNavbarCollapse>
+            <HxNav CssClass="me-auto">
+                <HxNavLink Href="/home/hackathons">Hackathons</HxNavLink>
+                <HxNavLink Href="/home/events">Events</HxNavLink>
+            </HxNav>
+            
+            <HxNav>
+                <HxNavLink Href="/home/settings">Settings</HxNavLink>
+            </HxNav>
+        </HxNavbarCollapse>
+    </HxNavbar>
+
+    <div class="d-flex flex-column flex-grow-1">
+        @Body
+    </div>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
